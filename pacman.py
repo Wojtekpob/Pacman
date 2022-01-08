@@ -2,7 +2,7 @@ import pygame
 from pygame import rect
 from math import fabs
 from settings import (
-    BLACK, CELL_LENGHT, COIN_RADIOUS, GHOST_HEIGHT, GHOST_RADIOUS, GHOST_WIDTH, POWERUP_VALUE, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
+    BLACK, CELL_LENGHT, COIN_RADIOUS, GHOST_HEIGHT, GHOST_RADIOUS, GHOST_WIDTH, PINK, POWERUP_VALUE, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
     MAZE_WIDTH, MAZE_HEIGHT,
     PLAYERS_HEIGHT,
     PLAYERS_SPEED,
@@ -271,6 +271,21 @@ class Ghost:
             return 'up'
         if direction == 'up':
             return 'down'
+
+
+class GhostPink(Ghost):
+    def destination(self):
+        if self.game.player.direction == 'left':
+            return (self.game.player.map_position()[0] - 4, self.game.player.map_position()[1])
+        elif self.game.player.direction == 'right' or self.game.player.direction is None:
+            return (self.game.player.map_position()[0] + 4, self.game.player.map_position()[1])
+        elif self.game.player.direction == 'up':
+            return (self.game.player.map_position()[0], self.game.player.map_position()[1] - 4)
+        elif self.game.player.direction == 'down':
+            return (self.game.player.map_position()[0], self.game.player.map_position()[1] + 4)
+
+    def draw(self):
+        pygame.draw.circle(self.game.screen, PINK, (self.rect.x + 10, self.rect.y + 10), GHOST_RADIOUS)
 
 
 class Wall:

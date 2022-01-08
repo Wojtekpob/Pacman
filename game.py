@@ -1,7 +1,7 @@
 import pygame
 from pygame.constants import K_SPACE
 from pygame.event import Event
-from pacman import Coin, EatableObject, Ghost, Player, PowerupCoin, Wall
+from pacman import Coin, EatableObject, Ghost, GhostPink, Player, PowerupCoin, Wall
 from settings import (
     BLACK, GHOST_HEIGHT, GHOST_WIDTH, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
     MAZE_WIDTH, MAZE_HEIGHT,
@@ -41,7 +41,7 @@ class Game:
         Creates object that can move that will represent player.
         """
         self.player = Player(self.player_image, self)
-        self.ghosts = [Ghost('red', self)]
+        self.ghosts = [Ghost('red', self), GhostPink('pink', self)]
 
     def create_map(self):
         map_dict = {}
