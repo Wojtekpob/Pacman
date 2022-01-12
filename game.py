@@ -1,7 +1,7 @@
 import pygame
 from pygame.constants import K_SPACE
 from pygame.event import Event
-from pacman import Coin, EatableObject, Ghost, GhostPink, Player, PowerupCoin, Wall
+from pacman import Coin, EatableObject, Ghost, GhostOrange, GhostPink, Player, PowerupCoin, Wall
 from settings import (
     BLACK, GHOST_HEIGHT, GHOST_WIDTH, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
     MAZE_WIDTH, MAZE_HEIGHT,
@@ -36,12 +36,13 @@ class Game:
         self.create_player_ghosts()
         self.create_map()
 
+
     def create_player_ghosts(self):
         """
         Creates object that can move that will represent player.
         """
         self.player = Player(self.player_image, self)
-        self.ghosts = [Ghost('red', self), GhostPink('pink', self)]
+        self.ghosts = [Ghost('red', self), GhostPink('pink', self), GhostOrange('orange', self)]
 
     def create_map(self):
         map_dict = {}
@@ -182,6 +183,7 @@ class Game:
         self.walls = []
         self.create_map()
         self.player.lives = 2
+        self.player.score = 0
         for ghost in self.ghosts:
             ghost.rect = pygame.Rect(RED_GHOST_STARTING_POSITION[0], RED_GHOST_STARTING_POSITION[1], GHOST_WIDTH, GHOST_HEIGHT)
 
