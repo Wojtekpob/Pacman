@@ -2,12 +2,12 @@ import pygame
 from pygame import rect
 from math import fabs, sqrt
 from settings import (
-    BLACK, CELL_LENGHT, COIN_RADIOUS, GHOST_HEIGHT, GHOST_RADIOUS, GHOST_WIDTH, ORANGE, PINK, POWERUP_VALUE, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
+    BLACK, BLUE_GHOST_STARTING_POSITION, CELL_LENGHT, COIN_RADIOUS, GHOST_HEIGHT, GHOST_RADIOUS, GHOST_WIDTH, ORANGE, ORANGE_GHOST_STARTING_POSITION, PINK, PINK_GHOST_STARTING_POSITION, POWERUP_VALUE, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
     MAZE_WIDTH, MAZE_HEIGHT,
     PLAYERS_HEIGHT,
     PLAYERS_SPEED,
     PLAYERS_STARTING_POSITION,
-    PLAYERS_WIDTH, TOP_EMPTY_SPACE, WALL_SIDE_LENGHT, YELLOW,
+    PLAYERS_WIDTH, TOP_EMPTY_SPACE, TURQUOISE, WALL_SIDE_LENGHT, YELLOW,
     COIN_VALUE, FRUIT_VALUE
 )
 
@@ -150,12 +150,11 @@ class Player:
 
 
 class Ghost:
-    def __init__(self, name, game):
+    def __init__(self, game):
         positionx, positiony = RED_GHOST_STARTING_POSITION
         self.rect = pygame.Rect(positionx, positiony, GHOST_WIDTH, GHOST_HEIGHT)
-        self.state = 'scatter'
         self.game = game
-        self.name = name
+        self.starting_pos = RED_GHOST_STARTING_POSITION
         self.player_position = self.game.player.map_position()
         self.direction = None
 
@@ -274,6 +273,13 @@ class Ghost:
 
 
 class GhostPink(Ghost):
+    def __init__(self, game):
+        self.game = game
+        x, y = PINK_GHOST_STARTING_POSITION
+        self.starting_pos = PINK_GHOST_STARTING_POSITION
+        self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
+        self.direction = None
+
     def destination(self):
         if self.game.player.direction == 'left':
             return (self.game.player.map_position()[0] - 4, self.game.player.map_position()[1])
@@ -289,6 +295,13 @@ class GhostPink(Ghost):
 
 
 class GhostOrange(Ghost):
+    def __init__(self, game):
+        self.game = game
+        x, y = ORANGE_GHOST_STARTING_POSITION
+        self.starting_pos = ORANGE_GHOST_STARTING_POSITION
+        self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
+        self.direction = None
+
     def destination(self):
         if self.road_to_player() > 5:
             return self.game.player.map_position()
@@ -303,6 +316,40 @@ class GhostOrange(Ghost):
     def draw(self):
         pygame.draw.circle(self.game.screen, ORANGE, (self.rect.x + 10, self.rect.y + 10), GHOST_RADIOUS)
 
+
+class GhostBlue(Ghost):
+    def __init__(self, game):
+        self.game = game
+        x, y = BLUE_GHOST_STARTING_POSITION
+        self.starting_pos = BLUE_GHOST_STARTING_POSITION
+        self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
+        self.direction = None
+        print(self.rect)
+
+
+    def destination(self):
+        a, b = self.two_cells_in_front_of_player()
+        c, d = self.game.ghosts[0].map_position()
+        # print(self.game.ghosts[0].map_position())
+        # pygame.draw.circle(self.game.screen, TURQUOISE, (2 * a - c, 2 * b - d), GHOST_RADIOUS)
+        # print(2 * a - c, 2 * b - d)
+        return (2 * a - c, 2 * b - d)
+
+    # def symmetric_point(self):
+
+
+    def two_cells_in_front_of_player(self):
+        if self.game.player.direction == 'left':
+            return (self.game.player.map_position()[0] - 2, self.game.player.map_position()[1])
+        elif self.game.player.direction == 'right' or self.game.player.direction is None:
+            return (self.game.player.map_position()[0] + 2, self.game.player.map_position()[1])
+        elif self.game.player.direction == 'up':
+            return (self.game.player.map_position()[0], self.game.player.map_position()[1] - 2)
+        elif self.game.player.direction == 'down':
+            return (self.game.player.map_position()[0], self.game.player.map_position()[1] + 2)
+
+    def draw(self):
+        pygame.draw.circle(self.game.screen, TURQUOISE, (self.rect.x + 10, self.rect.y + 10), GHOST_RADIOUS)
 
 class Wall:
     def __init__(self, posx, posy):

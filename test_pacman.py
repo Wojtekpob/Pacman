@@ -4,26 +4,6 @@ from game import Game
 from settings import *
 
 
-def test_create_moving_object():
-    game = Game()
-    moving_object = Player('pacman.png', game)
-    assert moving_object.speed == PLAYERS_SPEED
-    assert moving_object.positionx == 20
-    assert moving_object.positiony == 80
-
-
-# def test_move_up():
-#     game = Game()
-#     moving_object = Player(10, 10, 200, 100, 'pacman.png', 8, game)
-#     moving_object.move([97])
-#     assert moving_object.rect.x == 192
-
-def test_map_positon():
-    game = Game()
-    pacman = Player('pacman.png', game)
-    assert pacman.map_position() == (1, 1)
-
-
 def test_map_positon_00():
     game = Game()
     pacman = Player('pacman.png', game)
