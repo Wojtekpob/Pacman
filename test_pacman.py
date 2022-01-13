@@ -82,15 +82,6 @@ def test_map_position_up_move():
     assert pacman.map_position()[1] == 0
 
 
-def test_pacman_is_able_to_turn():
-    game = Game()
-    pacman = Player('pacman.png', game)
-    assert pacman.map_position()[0] == 1
-    assert pacman.map_position()[1] == 1
-    assert pacman.map_position()[1] == 1
-    assert pacman.able_to_change_direction('right') is True
-
-
 def test_pacman_is_able_to_turn_right_wall_start_true():
     game = Game()
     pacman = Player('pacman.png', game)

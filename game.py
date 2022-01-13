@@ -1,3 +1,4 @@
+from curses import KEY_MARK
 import pygame
 from pygame.event import Event
 from pacman import Coin, EatableObject, Ghost, GhostBlue, GhostOrange, GhostPink, Player, PowerupCoin, Wall
@@ -8,12 +9,11 @@ from settings import (
     PLAYERS_SPEED,
     PLAYERS_STARTING_POSITION,
     PLAYERS_WIDTH, TOP_EMPTY_SPACE, WALL_SIDE_LENGHT,
-    WHITE, YELLOW
+    WHITE, YELLOW, frightened_mode, normal_mode
 )
 
 pygame.init()
 pygame.font.init()
-HIT_WALL = pygame.event.custom_type()
 
 
 class Game:
@@ -34,7 +34,6 @@ class Game:
         self.load_images()
         self.create_player_ghosts()
         self.create_map()
-
 
     def create_player_ghosts(self):
         """
@@ -62,20 +61,29 @@ class Game:
 
     def run(self):
         """
-        Game loop
+        Game loopa
         """
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
                     print(self.player.score)
+                if frightened_mode == event.type:
+                    print('kek')
+                    pygame.time.set_timer(normal_mode, 6000, loops=1)
+                    for ghost in self.ghosts:
+                        ghost.scared_mode()
+                elif normal_mode == event.type:
+                    print('xD')
+                    for ghost in self.ghosts:
+                        ghost.normal_mode()
             if self.state == 'start':
                 # pygame.time.set_timer(scatter_mode, loops=)
                 self.display_start_screen()
                 self.update_state_start()
             elif self.state == 'game':
-                self.upadate_game()
-                # print(self.player.map_position())
+                self.update_game()
+                # print(self.player.massp_position())
             elif self.state == 'game over':
                 self.display_game_over()
                 self.update_game_over()
@@ -85,15 +93,37 @@ class Game:
     # def remove_coins(self):
     #     for coin in self.coins:
     #         if self.player.rect.colliderect(coin.rect):
-    #             self.coins.remove(coin)
+    #             self.dcoins.remove(coin)
 
-    def upadate_game(self):
+    def update_game(self):
         keys_pressed = pygame.key.get_pressed()
         self.player.move(keys_pressed)
+        self.player.eat_object()
+        self.player.ghost_interaction()
         for ghost in self.ghosts:
             ghost.move()
-        self.player.eat_object()
-        self.player.get_eaten()
+        # print(pygame.event.get())
+        # for event in pygame.event.get():
+        #     # print(pygame.event.get())
+        #     if frightened_mode == event.type:
+        #         pygame.event.post(normal_mode)
+        #         for ghost in self.ghosts:
+        #             ghost.scared_mode()
+        #         # print(pygame.event.get())
+        #     # print(pygame.event.get())
+        #     # print(pygame.event.get())
+        #     # for event in pygame.event.get():
+        #         if event.type == normal_mode.type:
+        #             print('kek')
+                    # for event in pygame.event.get():
+                    #     if normal_mode.type == event.type:
+                    #         print('kekw')
+        # print(pygame.event.get())
+        # for event in pygame.event.get():
+        #     if normal_mode.type == event.type:
+        #         print('kek')
+        #         for ghost in self.ghosts:
+        #             ghost.mode = None
         self.display_screen()
 
     def display_screen(self):
@@ -157,6 +187,7 @@ class Game:
         self.player.rect = pygame.Rect(PLAYERS_STARTING_POSITION[0], PLAYERS_STARTING_POSITION[1], PLAYERS_WIDTH, PLAYERS_HEIGHT)
         for ghost in self.ghosts:
             ghost.rect = pygame.Rect(ghost.starting_pos[0], ghost.starting_pos[1], GHOST_WIDTH, GHOST_HEIGHT)
+            ghost.mode = 'normal'
 
         if self.player.lives < 1:
             self.state = 'game over'
@@ -185,7 +216,8 @@ class Game:
         self.player.lives = 2
         self.player.score = 0
         for ghost in self.ghosts:
-            ghost.rect = pygame.Rect(RED_GHOST_STARTING_POSITION[0], RED_GHOST_STARTING_POSITION[1], GHOST_WIDTH, GHOST_HEIGHT)
+            ghost.mode = 'normal'
+            ghost.rect = pygame.Rect(ghost.starting_pos[0], ghost.starting_pos[1], GHOST_WIDTH, GHOST_HEIGHT)
 
 
 if __name__ == '__main__':
