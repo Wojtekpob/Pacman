@@ -185,8 +185,11 @@ class Ghost:
         if not self.mode == 'dead':
             color = BLUE if self.mode == 'scared' else self.color
             pygame.draw.circle(self.game.screen, color, (self.rect.x + 10, self.rect.y + 10), GHOST_RADIOUS)
+            pygame.draw.circle(self.game.screen, WHITE, (self.rect.x + 6, self.rect.y + 8), 2)
+            pygame.draw.circle(self.game.screen, WHITE, (self.rect.x + 14, self.rect.y + 8), 2)
         else:
-            pygame.draw.circle(self.game.screen, WHITE, (self.rect.x + 10, self.rect.y + 10), GHOST_RADIOUS - 5)
+            pygame.draw.circle(self.game.screen, WHITE, (self.rect.x + 6, self.rect.y + 8), GHOST_RADIOUS - 7)
+            pygame.draw.circle(self.game.screen, WHITE, (self.rect.x + 14, self.rect.y + 8), GHOST_RADIOUS - 7)
 
 
     def destination(self):

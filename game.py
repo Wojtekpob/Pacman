@@ -72,7 +72,8 @@ class Game:
                     print('kek')
                     pygame.time.set_timer(normal_mode, 6000, loops=1)
                     for ghost in self.ghosts:
-                        ghost.scared_mode()
+                        if not ghost.mode == 'dead':
+                            ghost.scared_mode()
                 elif normal_mode == event.type:
                     print('xD')
                     for ghost in self.ghosts:
