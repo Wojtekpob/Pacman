@@ -144,7 +144,7 @@ class Game:
         self.player.draw()
         for ghost in self.ghosts:
             ghost.draw()
-        self.draw_text('Arial Blssssssack', 40, f'SCORE: {self.player.score}', WHITE, 10, 5, True)
+        self.draw_text('Arial Black', 40, f'SCORE: {self.player.score}', WHITE, 10, 5, True)
         # for wall in self.walls:
         #     if self.player.rect.colliderect(wall.rect):
         #         self.player.direction = None

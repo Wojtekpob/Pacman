@@ -58,15 +58,16 @@ class Player:
         """
         self.change_direction(keys_pressed)
         # if self.able_to_move(self.direction):
-        if self.able_to_move():
-            if self.direction == 'right':
-                self.rect.x += self.speed
-            elif self.direction == 'left':
-                self.rect.x -= self.speed
-            elif self.direction == 'down':
-                self.rect.y += self.speed
-            elif self.direction == 'up':
-                self.rect.y -= self.speed
+        for _ in range(self.speed):
+            if self.able_to_move():
+                if self.direction == 'right':
+                    self.rect.x += 1
+                elif self.direction == 'left':
+                    self.rect.x -= 1
+                elif self.direction == 'down':
+                    self.rect.y += 1
+                elif self.direction == 'up':
+                    self.rect.y -= 1
         # self.move_sensors()
 
     def change_direction(self, keys_pressed):
@@ -191,14 +192,16 @@ class Ghost:
             pygame.draw.circle(self.game.screen, WHITE, (self.rect.x + 6, self.rect.y + 8), GHOST_RADIOUS - 7)
             pygame.draw.circle(self.game.screen, WHITE, (self.rect.x + 14, self.rect.y + 8), GHOST_RADIOUS - 7)
 
-
     def destination(self):
         if self.mode == 'dead':
             if self.map_position()[1] == 11 and self.map_position()[0] < 15 and self.map_position()[0] > 11:
-                self.mode = 'normal'
+                self.normal_mode()
             return self.starting_map_position()
         else:
-            return self.game.player.map_position()
+            return self.normal_destination()
+
+    def normal_destination(self):
+        return self.game.player.map_position()
 
     def move(self):
         # print(self.destination())
@@ -206,6 +209,13 @@ class Ghost:
         # if (self.rect.x % 20 == 0 and self.rect.y % 20 == 0):
         #     if self.mode == 'scared':
         #         self.speed = 1
+        # if self.rect.x % 20 == 0 and self.rect.y % 20 == 0:
+        #     if self.mode == 'scared':
+        #         self.speed = 1
+        #         print('scared')
+        #     elif self.mode == 'normal' or self.mode == 'dead':
+        #         self.speed = 2
+
         if self.able_to_change_direction(self.find_path()[0]) and not self.is_opposite(self.find_path()[0]):
             self.direction = self.find_path()[0]
         elif self.able_to_change_direction(self.find_path()[1]) and not self.is_opposite(self.find_path()[1]):
@@ -214,18 +224,19 @@ class Ghost:
             self.direction = self.find_path()[2]
         elif not self.able_to_move():
             self.direction = self.find_path()[3]
-        if self.able_to_move():
-            self.move_body()
+        for _ in range(self.speed):
+            if self.able_to_move():
+                self.move_body()
 
     def move_body(self):
         if self.direction == 'right':
-            self.rect.x += self.speed
+            self.rect.x += 1
         elif self.direction == 'left':
-            self.rect.x -= self.speed
+            self.rect.x -= 1
         elif self.direction == 'down':
-            self.rect.y += self.speed
+            self.rect.y += 1
         elif self.direction == 'up':
-            self.rect.y -= self.speed
+            self.rect.y -= 1
 
     def able_to_move(self):
         x, y = self.map_position()
@@ -309,16 +320,15 @@ class Ghost:
 
     def scared_mode(self):
         self.mode = 'scared'
+        self.speed = 1
 
     def normal_mode(self):
-        if self.mode == 'dead':
-            pass
-        else:
-            self.mode = 'normal'
-            self.speed = PLAYERS_SPEED
+        self.mode = 'normal'
+        self.speed = PLAYERS_SPEED
 
     def dead_mode(self):
         self.mode = 'dead'
+        self.speed = 4
 
 
 class GhostPink(Ghost):
@@ -337,20 +347,15 @@ class GhostPink(Ghost):
         self.mode = 'normal'
         self.speed = PLAYERS_SPEED
 
-    def destination(self):
-        if self.mode == 'dead':
-            if self.map_position()[1] == 11 and self.map_position()[0] < 15 and self.map_position()[0] > 11:
-                self.mode = 'normal'
-            return self.starting_map_position()
-        else:
-            if self.game.player.direction == 'left':
-                return (self.game.player.map_position()[0] - 4, self.game.player.map_position()[1])
-            elif self.game.player.direction == 'right' or self.game.player.direction is None:
-                return (self.game.player.map_position()[0] + 4, self.game.player.map_position()[1])
-            elif self.game.player.direction == 'up':
-                return (self.game.player.map_position()[0], self.game.player.map_position()[1] - 4)
-            elif self.game.player.direction == 'down':
-                return (self.game.player.map_position()[0], self.game.player.map_position()[1] + 4)
+    def normal_destination(self):
+        if self.game.player.direction == 'left':
+            return (self.game.player.map_position()[0] - 4, self.game.player.map_position()[1])
+        elif self.game.player.direction == 'right' or self.game.player.direction is None:
+            return (self.game.player.map_position()[0] + 4, self.game.player.map_position()[1])
+        elif self.game.player.direction == 'up':
+            return (self.game.player.map_position()[0], self.game.player.map_position()[1] - 4)
+        elif self.game.player.direction == 'down':
+            return (self.game.player.map_position()[0], self.game.player.map_position()[1] + 4)
 
     # def draw(self):
     #     pygame.draw.circle(self.game.screen, PINK, (self.rect.x + 10, self.rect.y + 10), GHOST_RADIOUS)
@@ -367,16 +372,11 @@ class GhostOrange(Ghost):
         self.mode = 'normal'
         self.speed = PLAYERS_SPEED
 
-    def destination(self):
-        if self.mode == 'dead':
-            if self.map_position()[1] == 11 and self.map_position()[0] < 15 and self.map_position()[0] > 11:
-                self.mode = 'normal'
-            return self.starting_map_position()
+    def normal_destination(self):
+        if self.road_to_player() > 5:
+            return self.game.player.map_position()
         else:
-            if self.road_to_player() > 5:
-                return self.game.player.map_position()
-            else:
-                return (20, 80)
+            return (20, 80)
 
     def road_to_player(self):
         road_horizontal = self.game.player.map_position()[0] - self.map_position()[0]
@@ -398,22 +398,10 @@ class GhostBlue(Ghost):
         self.color = TURQUOISE
         self.speed = PLAYERS_SPEED
 
-
-    def destination(self):
-        if self.mode == 'dead':
-            if self.map_position()[1] == 11 and self.map_position()[0] < 15 and self.map_position()[0] > 11:
-                self.mode = 'normal'
-            return self.starting_map_position()
-        else:
-            a, b = self.two_cells_in_front_of_player()
-            c, d = self.game.ghosts[0].map_position()
-            # print(self.game.ghosts[0].map_position())
-            # pygame.draw.circle(self.game.screen, TURQUOISE, (2 * a - c, 2 * b - d), GHOST_RADIOUS)
-            # print(2 * a - c, 2 * b - d)
-            return (2 * a - c, 2 * b - d)
-
-    # def symmetric_point(self):
-
+    def normal_destination(self):
+        a, b = self.two_cells_in_front_of_player()
+        c, d = self.game.ghosts[0].map_position()
+        return (2 * a - c, 2 * b - d)
 
     def two_cells_in_front_of_player(self):
         if self.game.player.direction == 'left':
@@ -424,9 +412,6 @@ class GhostBlue(Ghost):
             return (self.game.player.map_position()[0], self.game.player.map_position()[1] - 2)
         elif self.game.player.direction == 'down':
             return (self.game.player.map_position()[0], self.game.player.map_position()[1] + 2)
-
-    # def draw(self):
-    #     pygame.draw.circle(self.game.screen, TURQUOISE, (self.rect.x + 10, self.rect.y + 10), GHOST_RADIOUS)
 
 class Wall:
     def __init__(self, posx, posy):
