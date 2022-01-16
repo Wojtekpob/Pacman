@@ -86,6 +86,7 @@ class Game:
                     for ghost in self.ghosts:
                         if not ghost.mode == 'dead':
                             ghost.normal_mode()
+                        self.player.ghost_eaten = 0
                 if self.state == 'game':
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                         self.pause = True

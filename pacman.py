@@ -44,6 +44,7 @@ class Player:
         self.direction = None
         self.lives = 2
         self.score = 0
+        self.ghost_eaten = 0
 
     def map_position(self):
         x_map_pos = self.rect.x // 20
@@ -176,7 +177,8 @@ class Player:
                     self.lives -= 1
                 elif ghost.mode == 'scared':
                     ghost.dead_mode()
-                    self.score += 200
+                    self.score += 200 * (self.ghost_eaten + 1)
+                    self.ghost_eaten += 1
 
 
 class Ghost:
@@ -355,20 +357,21 @@ class Ghost:
 
 class GhostPink(Ghost):
     def __init__(self, game):
-        # super().__init__(game)
-        # x, y = PINK_GHOST_STARTING_POSITION
-        # self.starting_pos = PINK_GHOST_STARTING_POSITION
-        # self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
-        # self.color = PINK
-        self.game = game
+        super().__init__(game)
         x, y = PINK_GHOST_STARTING_POSITION
         self.starting_pos = PINK_GHOST_STARTING_POSITION
         self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
-        self.direction = None
         self.color = PINK
-        self.mode = 'normal'
-        self.speed = PLAYERS_SPEED
         self.name = 'pink'
+        # self.game = game
+        # x, y = PINK_GHOST_STARTING_POSITION
+        # self.starting_pos = PINK_GHOST_STARTING_POSITION
+        # self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
+        # self.direction = None
+        # self.color = PINK
+        # self.mode = 'normal'
+        # self.speed = PLAYERS_SPEED
+        # self.name = 'pink'
 
     def normal_destination(self):
         if self.game.player.direction == 'left':
@@ -386,15 +389,21 @@ class GhostPink(Ghost):
 
 class GhostOrange(Ghost):
     def __init__(self, game):
-        self.game = game
+        super().__init__(game)
         x, y = ORANGE_GHOST_STARTING_POSITION
         self.starting_pos = ORANGE_GHOST_STARTING_POSITION
         self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
-        self.direction = None
         self.color = ORANGE
-        self.mode = 'normal'
-        self.speed = PLAYERS_SPEED
         self.name = 'orange'
+        # self.game = game
+        # x, y = ORANGE_GHOST_STARTING_POSITION
+        # self.starting_pos = ORANGE_GHOST_STARTING_POSITION
+        # self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
+        # self.direction = None
+        # self.color = ORANGE
+        # self.mode = 'normal'
+        # self.speed = PLAYERS_SPEED
+        # self.name = 'orange'
 
     def normal_destination(self):
         if self.road_to_player() > 5:
@@ -413,15 +422,21 @@ class GhostOrange(Ghost):
 
 class GhostBlue(Ghost):
     def __init__(self, game):
-        self.game = game
-        self.direction = None
-        self.mode = 'normal'
-        self.starting_pos = BLUE_GHOST_STARTING_POSITION
+        super().__init__(game)
         x, y = BLUE_GHOST_STARTING_POSITION
+        self.starting_pos = BLUE_GHOST_STARTING_POSITION
         self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
         self.color = TURQUOISE
-        self.speed = PLAYERS_SPEED
         self.name = 'blue'
+        # self.game = game
+        # self.direction = None
+        # self.mode = 'normal'
+        # self.starting_pos = BLUE_GHOST_STARTING_POSITION
+        # x, y = BLUE_GHOST_STARTING_POSITION
+        # self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
+        # self.color = TURQUOISE
+        # self.speed = PLAYERS_SPEED
+        # self.name = 'blue'
 
     def normal_destination(self):
         a, b = self.two_cells_in_front_of_player()
