@@ -1,0 +1,1 @@
+[{"player_position": [9, 23], "score": 60, "ghost_data": {"direction": "down", "mode": "normal", "position": [18, 16]}}]

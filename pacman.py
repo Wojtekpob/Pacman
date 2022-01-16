@@ -1,6 +1,6 @@
 from statistics import mode
 import pygame
-from pygame import K_SPACE, KEYDOWN, USEREVENT, rect
+from pygame import K_LEFT, K_RIGHT, K_SPACE, K_UP, KEYDOWN, USEREVENT, K_s, key, rect
 from math import fabs, sqrt
 from settings import (
     BLACK, BLUE, BLUE_GHOST_STARTING_POSITION, CELL_LENGHT, COIN_RADIOUS, GHOST_HEIGHT, GHOST_RADIOUS, GHOST_WIDTH, ORANGE, ORANGE_GHOST_STARTING_POSITION, PINK, PINK_GHOST_STARTING_POSITION, POWERUP_VALUE, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
@@ -11,6 +11,7 @@ from settings import (
     PLAYERS_WIDTH, TOP_EMPTY_SPACE, TURQUOISE, WALL_SIDE_LENGHT, WHITE, YELLOW,
     COIN_VALUE, FRUIT_VALUE, frightened_mode
 )
+from random import sample
 
 
 class Player:
@@ -70,17 +71,28 @@ class Player:
                     self.rect.y -= 1
         # self.move_sensors()
 
+    def next_direction(self, keys_pressed):
+        if keys_pressed[pygame.K_a] or keys_pressed[K_LEFT]:
+            return 'left'
+        elif keys_pressed[pygame.K_w] or keys_pressed[K_UP]:
+            return 'up'
+        elif keys_pressed[pygame.K_d] or keys_pressed[K_RIGHT]:
+            return 'right'
+        elif keys_pressed[pygame.K_s] or keys_pressed[K_s]:
+            return 'down'
+
     def change_direction(self, keys_pressed):
-        if keys_pressed[pygame.K_a] and self.able_to_change_direction('left'):
+        next_direction = self.next_direction(keys_pressed)
+        if next_direction == 'left' and self.able_to_change_direction('left'):
             self.direction = 'left'
             self.image = self.image_left
-        if keys_pressed[pygame.K_w] and self.able_to_change_direction('up'):
+        if next_direction == 'up' and self.able_to_change_direction('up'):
             self.direction = 'up'
             self.image = self.image_up
-        if keys_pressed[pygame.K_s] and self.able_to_change_direction('down'):
+        if next_direction == 'down' and self.able_to_change_direction('down'):
             self.direction = 'down'
             self.image = self.image_down
-        if keys_pressed[pygame.K_d] and self.able_to_change_direction('right'):
+        if next_direction == 'right' and self.able_to_change_direction('right'):
             self.direction = 'right'
             self.image = self.image_right
 
@@ -142,6 +154,7 @@ class Player:
             if eat_rect.colliderect(coin.rect):
                 if isinstance(coin, PowerupCoin):
                     pygame.time.set_timer(frightened_mode, 1, loops=1)
+                    self.game.state = 'win'
                 # for event in pygame.event.get():
                     # if frightened_mode.type == event.type:
                     #     print('kek')
@@ -160,6 +173,7 @@ class Player:
                     self.lives -= 1
                 elif ghost.mode == 'scared':
                     ghost.dead_mode()
+                    self.score += 200
 
 
 class Ghost:
@@ -215,15 +229,15 @@ class Ghost:
         #         print('scared')
         #     elif self.mode == 'normal' or self.mode == 'dead':
         #         self.speed = 2
-
-        if self.able_to_change_direction(self.find_path()[0]) and not self.is_opposite(self.find_path()[0]):
-            self.direction = self.find_path()[0]
-        elif self.able_to_change_direction(self.find_path()[1]) and not self.is_opposite(self.find_path()[1]):
-            self.direction = self.find_path()[1]
-        elif self.able_to_change_direction(self.find_path()[2]) and not self.is_opposite(self.find_path()[2]):
-            self.direction = self.find_path()[2]
+        turning_hierarchy = self.random_path() if self.mode == 'scared' else self.find_path()
+        if self.able_to_change_direction(turning_hierarchy[0]) and not self.is_opposite(turning_hierarchy[0]):
+            self.direction = turning_hierarchy[0]
+        elif self.able_to_change_direction(turning_hierarchy[1]) and not self.is_opposite(turning_hierarchy[1]):
+            self.direction = turning_hierarchy[1]
+        elif self.able_to_change_direction(turning_hierarchy[2]) and not self.is_opposite(turning_hierarchy[2]):
+            self.direction = turning_hierarchy[2]
         elif not self.able_to_move():
-            self.direction = self.find_path()[3]
+            self.direction = turning_hierarchy[3]
         for _ in range(self.speed):
             if self.able_to_move():
                 self.move_body()
@@ -294,6 +308,9 @@ class Ghost:
         # print(turning_hierarchy)
         return turning_hierarchy
 
+    def random_path(self):
+        return sample(['left', 'right', 'up', 'down'], k=4)
+
     def is_opposite(self, direction):
         if self.direction == 'left':
             if direction == 'right':
@@ -321,6 +338,7 @@ class Ghost:
     def scared_mode(self):
         self.mode = 'scared'
         self.speed = 1
+        self.direction = self.opposite(self.direction)
 
     def normal_mode(self):
         self.mode = 'normal'

@@ -1,9 +1,12 @@
 from curses import KEY_MARK
+from datetime import date
+import json
+from matplotlib.font_manager import json_dump
 import pygame
 from pygame.event import Event
 from pacman import Coin, EatableObject, Ghost, GhostBlue, GhostOrange, GhostPink, Player, PowerupCoin, Wall
 from settings import (
-    BLACK, GHOST_HEIGHT, GHOST_WIDTH, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
+    BLACK, BLUE, GHOST_HEIGHT, GHOST_WIDTH, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
     MAZE_WIDTH, MAZE_HEIGHT,
     PLAYERS_HEIGHT,
     PLAYERS_SPEED,
@@ -20,6 +23,7 @@ class Game:
     def __init__(self):
         self.clock = pygame.time.Clock()
         self.running = True
+        self.pause = False
         self.walls = []
         self.coins = []
         self.powerup_coins = []
@@ -29,6 +33,7 @@ class Game:
         pygame.display.set_icon(self.icon)
         self.screen = screen
         self.state = 'start'
+        # self.load_game()
 
     def initialize_game(self):
         self.load_images()
@@ -78,23 +83,64 @@ class Game:
                     print('xD')
                     for ghost in self.ghosts:
                         ghost.normal_mode()
+                if self.state == 'game':
+                    if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                        self.pause = True
             if self.state == 'start':
                 # pygame.time.set_timer(scatter_mode, loops=)
                 self.display_start_screen()
                 self.update_state_start()
             elif self.state == 'game':
                 self.update_game()
-                # print(self.player.massp_position())
+                while self.pause:
+                    self.save_game()
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            self.running = False
+                            self.pause = False
+                        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                            self.pause = False
             elif self.state == 'game over':
                 self.display_game_over()
                 self.update_game_over()
+            elif self.state == 'win':
+                self.display_win_screen()
+                self.update_win_screen()
             self.clock.tick(FPS)
         pygame.quit()
 
-    # def remove_coins(self):
-    #     for coin in self.coins:
-    #         if self.player.rect.colliderect(coin.rect):
-    #             self.dcoins.remove(coin)
+    def save_game(self):
+        data = []
+        # coins = ((coin.positionx, coin.positiony, coin.__class__) for coin in self.coins)
+        player_position = self.player.map_position()
+        score = self.player.score
+        for ghost in self.ghosts:
+            ghost_data = {
+                'direction': ghost.direction,
+                'mode': ghost.mode,
+                'position': ghost.map_position()
+            }
+        game_data = {
+            # 'coins': coins,
+            'player_position': player_position,
+            'score': score,
+            'ghost_data': ghost_data
+        }
+        data.append(game_data)
+        # print(data)
+
+        with open('save.txt', 'w') as file_handle:
+            json.dump(data, file_handle)
+
+    def load_game(self):
+
+        with open('save.txt') as handle:
+            file_handle = json.load(handle)
+            player_position = file_handle['player_position']
+            score = file_handle['score']
+            ghost_data = file_handle['ghost_data']
+        # print(player_position, score, ghost_data)
+
 
     def update_game(self):
         keys_pressed = pygame.key.get_pressed()
@@ -124,7 +170,9 @@ class Game:
         #     if normal_mode.type == event.type:
         #         print('kek')
         #         for ghost in self.ghosts:
-        #             ghost.mode = None
+        #             ghost.modse = None
+        if len(self.coins) == 0:
+            self.state = 'win'
         self.display_screen()
 
     def display_screen(self):
@@ -188,7 +236,7 @@ class Game:
         self.player.rect = pygame.Rect(PLAYERS_STARTING_POSITION[0], PLAYERS_STARTING_POSITION[1], PLAYERS_WIDTH, PLAYERS_HEIGHT)
         for ghost in self.ghosts:
             ghost.rect = pygame.Rect(ghost.starting_pos[0], ghost.starting_pos[1], GHOST_WIDTH, GHOST_HEIGHT)
-            ghost.mode = 'normal'
+            ghost.normal_mode()
 
         if self.player.lives < 1:
             self.state = 'game over'
@@ -216,10 +264,26 @@ class Game:
         self.create_map()
         self.player.lives = 2
         self.player.score = 0
+        self.player.rect = pygame.Rect(PLAYERS_STARTING_POSITION[0], PLAYERS_STARTING_POSITION[1], PLAYERS_WIDTH, PLAYERS_HEIGHT)
         for ghost in self.ghosts:
-            ghost.mode = 'normal'
+            ghost.normal_mode()
             ghost.rect = pygame.Rect(ghost.starting_pos[0], ghost.starting_pos[1], GHOST_WIDTH, GHOST_HEIGHT)
 
+    def update_win_screen(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                self.reset()
+                self.state = 'game'
+
+    def display_win_screen(self):
+        self.screen.fill(BLACK)
+        self.draw_text('Georgia Pro Black', 50, 'YOU WON', BLUE,
+        100, 300, True)
+        self.draw_text('Georgia Pro Black', 50, 'PUSH SPACE TO START AGAIN', WHITE,
+        100, 500, True)
+        pygame.display.update()
 
 if __name__ == '__main__':
     game = Game()
