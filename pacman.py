@@ -1,6 +1,6 @@
 from statistics import mode
 import pygame
-from pygame import K_LEFT, K_RIGHT, K_SPACE, K_UP, KEYDOWN, USEREVENT, K_s, key, rect
+from pygame import K_LEFT, K_RIGHT, K_SPACE, K_UP, KEYDOWN, USEREVENT, K_s, Rect, key, rect
 from math import fabs, sqrt
 from settings import (
     BLACK, BLUE, BLUE_GHOST_STARTING_POSITION, CELL_LENGHT, COIN_RADIOUS, GHOST_HEIGHT, GHOST_RADIOUS, GHOST_WIDTH, ORANGE, ORANGE_GHOST_STARTING_POSITION, PINK, PINK_GHOST_STARTING_POSITION, POWERUP_VALUE, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
@@ -82,19 +82,23 @@ class Player:
             return 'down'
 
     def change_direction(self, keys_pressed):
-        next_direction = self.next_direction(keys_pressed)
-        if next_direction == 'left' and self.able_to_change_direction('left'):
-            self.direction = 'left'
-            self.image = self.image_left
-        if next_direction == 'up' and self.able_to_change_direction('up'):
-            self.direction = 'up'
-            self.image = self.image_up
-        if next_direction == 'down' and self.able_to_change_direction('down'):
-            self.direction = 'down'
-            self.image = self.image_down
-        if next_direction == 'right' and self.able_to_change_direction('right'):
-            self.direction = 'right'
-            self.image = self.image_right
+        if self.next_direction(keys_pressed):
+            next_direction = self.next_direction(keys_pressed)
+        try:
+            if next_direction == 'left' and self.able_to_change_direction('left'):
+                self.direction = 'left'
+                self.image = self.image_left
+            elif next_direction == 'up' and self.able_to_change_direction('up'):
+                self.direction = 'up'
+                self.image = self.image_up
+            elif next_direction == 'down' and self.able_to_change_direction('down'):
+                self.direction = 'down'
+                self.image = self.image_down
+            elif next_direction == 'right' and self.able_to_change_direction('right'):
+                self.direction = 'right'
+                self.image = self.image_right
+        except UnboundLocalError:
+            pass
 
     def able_to_move(self):
         x, y = self.map_position()
@@ -154,7 +158,6 @@ class Player:
             if eat_rect.colliderect(coin.rect):
                 if isinstance(coin, PowerupCoin):
                     pygame.time.set_timer(frightened_mode, 1, loops=1)
-                    self.game.state = 'win'
                 # for event in pygame.event.get():
                     # if frightened_mode.type == event.type:
                     #     print('kek')

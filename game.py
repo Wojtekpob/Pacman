@@ -84,7 +84,8 @@ class Game:
                 elif normal_mode == event.type:
                     print('xD')
                     for ghost in self.ghosts:
-                        ghost.normal_mode()
+                        if not ghost.mode == 'dead':
+                            ghost.normal_mode()
                 if self.state == 'game':
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                         self.pause = True
@@ -182,7 +183,13 @@ class Game:
                     ghost = GhostBlue(game)
                 ghost.rect = pygame.Rect(posx, posy, GHOST_HEIGHT, GHOST_WIDTH)
                 ghost.direction = direction
-                ghost.mode = mode
+                if mode == 'dead':
+                    ghost.dead_mode()
+                elif mode == 'normal':
+                    ghost.normal_mode()
+                elif mode == 'scared':
+                    ghost.scared_mode()
+                    pygame.time.set_timer(normal_mode, 3000, loops=1)
                 self.ghosts.append(ghost)
 
     def update_game(self):
