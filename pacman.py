@@ -187,6 +187,7 @@ class Ghost:
         self.color = RED
         self.mode = 'normal'
         self.speed = PLAYERS_SPEED
+        self.name = 'red'
 
     def map_position(self):
         x_map_pos = self.rect.x // 20
@@ -364,6 +365,7 @@ class GhostPink(Ghost):
         self.color = PINK
         self.mode = 'normal'
         self.speed = PLAYERS_SPEED
+        self.name = 'pink'
 
     def normal_destination(self):
         if self.game.player.direction == 'left':
@@ -389,6 +391,7 @@ class GhostOrange(Ghost):
         self.color = ORANGE
         self.mode = 'normal'
         self.speed = PLAYERS_SPEED
+        self.name = 'orange'
 
     def normal_destination(self):
         if self.road_to_player() > 5:
@@ -415,6 +418,7 @@ class GhostBlue(Ghost):
         self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
         self.color = TURQUOISE
         self.speed = PLAYERS_SPEED
+        self.name = 'blue'
 
     def normal_destination(self):
         a, b = self.two_cells_in_front_of_player()

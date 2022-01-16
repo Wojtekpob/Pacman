@@ -1,6 +1,7 @@
 from curses import KEY_MARK
 from datetime import date
 import json
+from turtle import pos
 from matplotlib.font_manager import json_dump
 import pygame
 from pygame.event import Event
@@ -26,18 +27,19 @@ class Game:
         self.pause = False
         self.walls = []
         self.coins = []
-        self.powerup_coins = []
+        self.ghosts = []
         self.initialize_game()
         screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption('Pacman')
         pygame.display.set_icon(self.icon)
         self.screen = screen
         self.state = 'start'
-        # self.load_game()
+
+    def start_new_game(self):
+        self.create_player_ghosts()
 
     def initialize_game(self):
         self.load_images()
-        self.create_player_ghosts()
         self.create_map()
 
     def create_player_ghosts(self):
@@ -114,33 +116,74 @@ class Game:
         # coins = ((coin.positionx, coin.positiony, coin.__class__) for coin in self.coins)
         player_position = self.player.map_position()
         score = self.player.score
+        coins_data = []
+        ghosts_data = []
+        for coin in self.coins:
+            posx = coin.rect.x
+            posy = coin.rect.y
+            if isinstance(coin, PowerupCoin):
+                type = 'powerup'
+            else:
+                type = 'coin'
+            coin_data = {
+                'pos': (posx, posy),
+                'type': type
+            }
+            coins_data.append(coin_data)
         for ghost in self.ghosts:
             ghost_data = {
                 'direction': ghost.direction,
                 'mode': ghost.mode,
-                'position': ghost.map_position()
+                'position': ghost.map_position(),
+                'name': ghost.name
             }
+            ghosts_data.append(ghost_data)
         game_data = {
-            # 'coins': coins,
+            'coins': coins_data,
             'player_position': player_position,
             'score': score,
-            'ghost_data': ghost_data
+            'ghosts_data': ghosts_data
         }
-        data.append(game_data)
-        # print(data)
-
         with open('save.txt', 'w') as file_handle:
-            json.dump(data, file_handle)
+            json.dump(game_data, file_handle)
 
     def load_game(self):
-
+        self.player = Player(self.player_image, self)
         with open('save.txt') as handle:
             file_handle = json.load(handle)
-            player_position = file_handle['player_position']
+            player_positionx = file_handle['player_position'][0] * 20
+            # print(file_handle[0])
+            player_positiony = file_handle['player_position'][1] * 20 + TOP_EMPTY_SPACE
             score = file_handle['score']
-            ghost_data = file_handle['ghost_data']
-        # print(player_position, score, ghost_data)
-
+            ghosts_data = file_handle['ghosts_data']
+            self.coins = []
+            for coin_data in file_handle['coins']:
+                posx = coin_data['pos'][0]
+                posy = coin_data['pos'][1]
+                if coin_data['type'] == 'coin':
+                    self.coins.append(Coin(posx, posy, self))
+                else:
+                    self.coins.append(PowerupCoin(posx, posy, self))
+            self.player.score = score
+            self.player.rect = pygame.Rect(player_positionx, player_positiony, PLAYERS_WIDTH, PLAYERS_WIDTH)
+            for ghost_data in ghosts_data:
+                name = ghost_data['name']
+                posx = ghost_data['position'][0] * 20
+                posy = ghost_data['position'][1] * 20 + TOP_EMPTY_SPACE
+                mode = ghost_data['mode']
+                direction = ghost_data['direction']
+                if name == 'red':
+                    ghost = Ghost(game)
+                elif name == 'pink':
+                    ghost = GhostPink(game)
+                elif name == 'orange':
+                    ghost = GhostOrange(game)
+                elif name == 'blue':
+                    ghost = GhostBlue(game)
+                ghost.rect = pygame.Rect(posx, posy, GHOST_HEIGHT, GHOST_WIDTH)
+                ghost.direction = direction
+                ghost.mode = mode
+                self.ghosts.append(ghost)
 
     def update_game(self):
         keys_pressed = pygame.key.get_pressed()
@@ -220,6 +263,8 @@ class Game:
         self.screen.fill(BLACK)
         self.draw_text('Georgia Pro Black', 50, 'PUSH SPACEBAR TO START', YELLOW,
         100, 300, True)
+        self.draw_text('Georgia Pro Black', 50, 'L TO LOAD', YELLOW,
+        100, 600, True)
         pygame.display.update()
 
     def update_state_start(self):
@@ -227,8 +272,11 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
             # if event.type
-
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                self.start_new_game()
+                self.state = 'game'
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_l:
+                self.load_game()
                 self.state = 'game'
 
 
