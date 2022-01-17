@@ -5,7 +5,7 @@ from turtle import pos
 from matplotlib.font_manager import json_dump
 import pygame
 from pygame.event import Event
-from pacman import Coin, EatableObject, Ghost, GhostBlue, GhostOrange, GhostPink, Player, PowerupCoin, Wall
+from pacman import Coin, EatableObject, Ghost, GhostBlue, GhostOrange, GhostPink, GhostRed, Player, PowerupCoin, Wall
 from settings import (
     BLACK, BLUE, GHOST_HEIGHT, GHOST_WIDTH, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
     MAZE_WIDTH, MAZE_HEIGHT,
@@ -28,7 +28,8 @@ class Game:
         self.walls = []
         self.coins = []
         self.ghosts = []
-        self.initialize_game()
+        self.map = 1
+        self.load_images()
         screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption('Pacman')
         pygame.display.set_icon(self.icon)
@@ -36,22 +37,25 @@ class Game:
         self.state = 'start'
 
     def start_new_game(self):
-        self.create_player_ghosts()
+        self.initialize_game()
 
     def initialize_game(self):
-        self.load_images()
-        self.create_map()
+        self.player = Player(self.player_image, self)
+        self.ghosts = [GhostRed(self), GhostOrange(self), GhostPink(self), GhostBlue(self)]
+        self.load_map()
 
     def create_player_ghosts(self):
         """
         Creates object that can move that will represent player.
         """
         self.player = Player(self.player_image, self)
-        self.ghosts = [Ghost(self), GhostOrange(self), GhostPink(self), GhostBlue(self)]
+        # self.ghosts = [GhostRed(self), GhostOrange(self), GhostPink(self), GhostBlue(self)]
 
-    def create_map(self):
+    def create_map(self, maze_map):
         map_dict = {}
-        with open('walls.txt') as file_handle:
+        self.walls = []
+        self.coins = []
+        with open(maze_map) as file_handle:
             for y, row in enumerate(file_handle):
                 for x, number in enumerate(row):
                     posx = x * WALL_SIDE_LENGHT
@@ -59,7 +63,7 @@ class Game:
                     if number != '\n':
                         map_dict[(x, y)] = number
                     if number == '1':
-                        self.walls.append(Wall(posx, posy))
+                        self.walls.append(Wall(posx, posy, self))
                     if number == '2':
                         self.coins.append(Coin(posx, posy, self))
                     if number == '3':
@@ -91,7 +95,6 @@ class Game:
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                         self.pause = True
             if self.state == 'start':
-                # pygame.time.set_timer(scatter_mode, loops=)
                 self.display_start_screen()
                 self.update_state_start()
             elif self.state == 'game':
@@ -114,12 +117,11 @@ class Game:
         pygame.quit()
 
     def save_game(self):
-        data = []
-        # coins = ((coin.positionx, coin.positiony, coin.__class__) for coin in self.coins)
         player_position = self.player.map_position()
         score = self.player.score
         coins_data = []
         ghosts_data = []
+        map = self.map
         for coin in self.coins:
             posx = coin.rect.x
             posy = coin.rect.y
@@ -144,54 +146,69 @@ class Game:
             'coins': coins_data,
             'player_position': player_position,
             'score': score,
-            'ghosts_data': ghosts_data
+            'ghosts_data': ghosts_data,
+            'map': map
         }
+        print(map)
         with open('save.txt', 'w') as file_handle:
             json.dump(game_data, file_handle)
 
     def load_game(self):
-        self.player = Player(self.player_image, self)
         with open('save.txt') as handle:
             file_handle = json.load(handle)
             player_positionx = file_handle['player_position'][0] * 20
-            # print(file_handle[0])
             player_positiony = file_handle['player_position'][1] * 20 + TOP_EMPTY_SPACE
             score = file_handle['score']
+            map = file_handle['map']
+            self.map = map
+            self.load_player((player_positionx, player_positiony), score)
+            self.load_map()
             ghosts_data = file_handle['ghosts_data']
             self.coins = []
             for coin_data in file_handle['coins']:
-                posx = coin_data['pos'][0]
-                posy = coin_data['pos'][1]
-                if coin_data['type'] == 'coin':
-                    self.coins.append(Coin(posx, posy, self))
-                else:
-                    self.coins.append(PowerupCoin(posx, posy, self))
-            self.player.score = score
-            self.player.rect = pygame.Rect(player_positionx, player_positiony, PLAYERS_WIDTH, PLAYERS_WIDTH)
+                self.load_coin(coin_data)
             for ghost_data in ghosts_data:
-                name = ghost_data['name']
-                posx = ghost_data['position'][0] * 20
-                posy = ghost_data['position'][1] * 20 + TOP_EMPTY_SPACE
-                mode = ghost_data['mode']
-                direction = ghost_data['direction']
-                if name == 'red':
-                    ghost = Ghost(game)
-                elif name == 'pink':
-                    ghost = GhostPink(game)
-                elif name == 'orange':
-                    ghost = GhostOrange(game)
-                elif name == 'blue':
-                    ghost = GhostBlue(game)
-                ghost.rect = pygame.Rect(posx, posy, GHOST_HEIGHT, GHOST_WIDTH)
-                ghost.direction = direction
-                if mode == 'dead':
-                    ghost.dead_mode()
-                elif mode == 'normal':
-                    ghost.normal_mode()
-                elif mode == 'scared':
-                    ghost.scared_mode()
-                    pygame.time.set_timer(normal_mode, 3000, loops=1)
-                self.ghosts.append(ghost)
+                self.load_ghost(ghost_data)
+
+    def load_player(self, position, score):
+        self.player = Player(self.player_image, self)
+        x, y = position
+        self.player.score = score
+        self.player.rect = pygame.Rect(x, y, PLAYERS_WIDTH, PLAYERS_WIDTH)
+
+
+    def load_coin(self, coin_data):
+        posx = coin_data['pos'][0]
+        posy = coin_data['pos'][1]
+        if coin_data['type'] == 'coin':
+            self.coins.append(Coin(posx, posy, self))
+        else:
+            self.coins.append(PowerupCoin(posx, posy, self))
+
+    def load_ghost(self, ghost_data):
+        name = ghost_data['name']
+        posx = ghost_data['position'][0] * 20
+        posy = ghost_data['position'][1] * 20 + TOP_EMPTY_SPACE
+        mode = ghost_data['mode']
+        direction = ghost_data['direction']
+        if name == 'red':
+            ghost = GhostRed(game)
+        elif name == 'pink':
+            ghost = GhostPink(game)
+        elif name == 'orange':
+            ghost = GhostOrange(game)
+        elif name == 'blue':
+            ghost = GhostBlue(game)
+        ghost.rect = pygame.Rect(posx, posy, GHOST_HEIGHT, GHOST_WIDTH)
+        ghost.direction = direction
+        if mode == 'dead':
+            ghost.dead_mode()
+        elif mode == 'normal':
+            ghost.normal_mode()
+        elif mode == 'scared':
+            ghost.scared_mode()
+            pygame.time.set_timer(normal_mode, 3000, loops=1)
+        self.ghosts.append(ghost)
 
     def update_game(self):
         keys_pressed = pygame.key.get_pressed()
@@ -200,31 +217,21 @@ class Game:
         self.player.ghost_interaction()
         for ghost in self.ghosts:
             ghost.move()
-        # print(pygame.event.get())
-        # for event in pygame.event.get():
-        #     # print(pygame.event.get())
-        #     if frightened_mode == event.type:
-        #         pygame.event.post(normal_mode)
-        #         for ghost in self.ghosts:
-        #             ghost.scared_mode()
-        #         # print(pygame.event.get())
-        #     # print(pygame.event.get())
-        #     # print(pygame.event.get())
-        #     # for event in pygame.event.get():
-        #         if event.type == normal_mode.type:
-        #             print('kek')
-                    # for event in pygame.event.get():
-                    #     if normal_mode.type == event.type:
-                    #         print('kekw')
-        # print(pygame.event.get())
-        # for event in pygame.event.get():
-        #     if normal_mode.type == event.type:
-        #         print('kek')
-        #         for ghost in self.ghosts:
-        #             ghost.modse = None
         if len(self.coins) == 0:
-            self.state = 'win'
+            if self.map < 3:
+                self.map += 1
+                self.load_map()
+                self.back_to_start()
+            else:
+                self.state = 'win'
+                self.back_to_start()
         self.display_screen()
+
+    def load_map(self):
+        if self.map == 1:
+            self.create_map('map1.txt')
+        elif self.map == 2:
+            self.create_map('map2.txt')
 
     def display_screen(self):
         """
@@ -237,19 +244,15 @@ class Game:
         #     pygame.draw.line(self.background, (0, 255, 0), (0, x), (MAZE_WIDTH, x)) # poziome
             # jeden kwadracik ma 20 na 20, wymiary planszy to 28x31
         self.screen.fill(BLACK)
-        self.screen.blit(self.background, (0, TOP_EMPTY_SPACE))
+        # self.screen.blit(self.background, (0, TOP_EMPTY_SPACE))
+        for wall in self.walls:
+            wall.draw()
         for coin in self.coins:
             coin.draw()
         self.player.draw()
         for ghost in self.ghosts:
             ghost.draw()
         self.draw_text('Arial Black', 40, f'SCORE: {self.player.score}', WHITE, 10, 5, True)
-        # for wall in self.walls:
-        #     if self.player.rect.colliderect(wall.rect):
-        #         self.player.direction = None
-        # if pygame.eventaaaaaa.get(HIT_WALL):
-        #     for wall in self.walls:
-        #         scrssssssssssseen.blit(self.player.image, (wall.rect.x, wall.rect.y))
         pygame.display.update()
 
     def load_images(self):
@@ -311,13 +314,15 @@ class Game:
                 self.running = False
             # if event.type
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                self.write_highscore()
                 self.reset()
                 self.state = 'game'
 
     def reset(self):
         self.coins = []
         self.walls = []
-        self.create_map()
+        self.map = 1
+        self.load_map()
         self.player.lives = 2
         self.player.score = 0
         self.player.rect = pygame.Rect(PLAYERS_STARTING_POSITION[0], PLAYERS_STARTING_POSITION[1], PLAYERS_WIDTH, PLAYERS_HEIGHT)
@@ -340,6 +345,11 @@ class Game:
         self.draw_text('Georgia Pro Black', 50, 'PUSH SPACE TO START AGAIN', WHITE,
         100, 500, True)
         pygame.display.update()
+
+    def write_highscore(self):
+        with open('highscore.txt', '+a') as file_handle:
+            file_handle.write(f', {self.player.score}')
+
 
 if __name__ == '__main__':
     game = Game()

@@ -9,12 +9,83 @@ from settings import (
     PLAYERS_SPEED,
     PLAYERS_STARTING_POSITION,
     PLAYERS_WIDTH, TOP_EMPTY_SPACE, TURQUOISE, WALL_SIDE_LENGHT, WHITE, YELLOW,
-    COIN_VALUE, FRUIT_VALUE, frightened_mode
+    COIN_VALUE, frightened_mode
 )
 from random import sample
 
 
-class Player:
+class MovingObject:
+    def __init__(self, game):
+        self.game = game
+        self.direction = None
+        self.speed = PLAYERS_SPEED
+        self.rect = pygame.Rect(300, 300, 20, 20)
+
+    def map_position(self):
+        x_map_pos = self.rect.x // 20
+        y_map_pos = (self.rect.y - TOP_EMPTY_SPACE) // 20
+        return (x_map_pos, y_map_pos)
+
+    def able_to_move(self):
+        x, y = self.map_position()
+        try:
+            if (self.rect.x % 20 == 0 and self.rect.y % 20 == 0):
+                if self.direction == 'left':
+                    return not self.game.map_dict[(x - 1, y)] == '1'
+                elif self.direction == 'right':
+                    return not self.game.map_dict[(x + 1, y)] == '1'
+                elif self.direction == 'up':
+                    return not self.game.map_dict[(x, y - 1)] == '1'
+                elif self.direction == 'down':
+                    return not self.game.map_dict[(x, y + 1)] == '1'
+            else:
+                return True
+        except KeyError:
+            self.teleport_back_to_map()
+            return True
+
+    def able_to_change_direction(self, direction):
+        x, y = self.map_position()
+        try:
+            if (self.rect.x % 20 == 0 and self.rect.y % 20 == 0) or self.is_opposite(direction):
+                if direction == 'left':
+                    return not self.game.map_dict[(x - 1, y)] == '1'
+                elif direction == 'right':
+                    return not self.game.map_dict[(x + 1, y)] == '1'
+                elif direction == 'up':
+                    return not self.game.map_dict[(x, y - 1)] == '1'
+                elif direction == 'down':
+                    return not self.game.map_dict[(x, y + 1)] == '1'
+            else:
+                return False
+        except KeyError:
+            return True
+
+    def is_opposite(self, direction):
+        if self.direction == self.opposite(direction):
+            return True
+
+    def opposite(self, direction):
+        if direction == 'left':
+            return 'right'
+        if direction == 'right':
+            return 'left'
+        if direction == 'down':
+            return 'up'
+        if direction == 'up':
+            return 'down'
+
+    def teleport_back_to_map(self):
+        if self.map_position()[0] < 0:
+            self.rect.x = 560
+        elif self.map_position()[0] > 28:
+            self.rect.x = 0
+
+
+
+
+
+class Player(MovingObject):
     def __init__(self, image, game):
         """
         Creating MovingObject class, which will
@@ -24,7 +95,7 @@ class Player:
         position x and y: starting position on the map
         image (.png file): image representing object
         """
-        self.speed = PLAYERS_SPEED
+        super().__init__(game)
         self.positionx = PLAYERS_STARTING_POSITION[0]
         self.positiony = PLAYERS_STARTING_POSITION[1]
         image = pygame.image.load(image)
@@ -34,23 +105,10 @@ class Player:
         self.image_left = pygame.transform.rotate(image, 180)
         self.image_up = pygame.transform.rotate(image, 90)
         self.image_down = pygame.transform.rotate(image, 270)
-        self.game = game
-        # self.initialize_wall_sensors()
-        # self.image_right = image
-        # self.image_left = pygame.transform.rotate(image, 180)
-        # self.image_up = pygame.transform.rotate(image, 90)
-        # self.image_left = pygame.transform.rotate(image, 180)
         self.rect = pygame.Rect(PLAYERS_STARTING_POSITION[0], PLAYERS_STARTING_POSITION[1], PLAYERS_WIDTH, PLAYERS_HEIGHT)
-        self.direction = None
         self.lives = 2
         self.score = 0
         self.ghost_eaten = 0
-
-    def map_position(self):
-        x_map_pos = self.rect.x // 20
-        y_map_pos = (self.rect.y - TOP_EMPTY_SPACE) // 20
-        return (x_map_pos, y_map_pos)
-
 
     def move(self, keys_pressed):
         """
@@ -58,6 +116,7 @@ class Player:
         Arg:
         keys_pressed: direction of movement is based on keys(W, A, S, D)
         """
+        self.teleport_back_to_map()
         self.change_direction(keys_pressed)
         # if self.able_to_move(self.direction):
         for _ in range(self.speed):
@@ -83,65 +142,21 @@ class Player:
             return 'down'
 
     def change_direction(self, keys_pressed):
-        if self.next_direction(keys_pressed):
-            next_direction = self.next_direction(keys_pressed)
-        try:
-            if next_direction == 'left' and self.able_to_change_direction('left'):
-                self.direction = 'left'
-                self.image = self.image_left
-            elif next_direction == 'up' and self.able_to_change_direction('up'):
-                self.direction = 'up'
-                self.image = self.image_up
-            elif next_direction == 'down' and self.able_to_change_direction('down'):
-                self.direction = 'down'
-                self.image = self.image_down
-            elif next_direction == 'right' and self.able_to_change_direction('right'):
-                self.direction = 'right'
-                self.image = self.image_right
-        except UnboundLocalError:
-            pass
-
-    def able_to_move(self):
-        x, y = self.map_position()
-        if (self.rect.x % 20 == 0 and self.rect.y % 20 == 0):
-            if self.direction == 'left':
-                return not self.game.map_dict[(x - 1, y)] == '1'
-            elif self.direction == 'right':
-                return not self.game.map_dict[(x + 1, y)] == '1'
-            elif self.direction == 'up':
-                return not self.game.map_dict[(x, y - 1)] == '1'
-            elif self.direction == 'down':
-                return not self.game.map_dict[(x, y + 1)] == '1'
-        else:
-            return True
-
-    def able_to_change_direction(self, direction):
-        x, y = self.map_position()
-        if (self.rect.x % 20 == 0 and self.rect.y % 20 == 0) or self.is_opposite(direction):
-            if direction == 'left':
-                return not self.game.map_dict[(x - 1, y)] == '1'
-            elif direction == 'right':
-                return not self.game.map_dict[(x + 1, y)] == '1'
-            elif direction == 'up':
-                return not self.game.map_dict[(x, y - 1)] == '1'
-            elif direction == 'down':
-                return not self.game.map_dict[(x, y + 1)] == '1'
-        else:
-            return False
-
-    def is_opposite(self, direction):
-        if self.direction == 'left':
-            if direction == 'right':
-                return True
-        if self.direction == 'right':
-            if direction == 'left':
-                return True
-        if self.direction == 'up':
-            if direction == 'down':
-                return True
-        if self.direction == 'down':
-            if direction == 'up':
-                return True
+        # if self.next_direction(keys_pressed):
+        #     next_direction = self.next_direction(keys_pressed)
+        # try:
+        if keys_pressed[pygame.K_a] and self.able_to_change_direction('left'):
+            self.direction = 'left'
+            self.image = self.image_left
+        elif keys_pressed[pygame.K_w] and self.able_to_change_direction('up'):
+            self.direction = 'up'
+            self.image = self.image_up
+        elif keys_pressed[pygame.K_s] and self.able_to_change_direction('down'):
+            self.direction = 'down'
+            self.image = self.image_down
+        elif keys_pressed[pygame.K_d] and self.able_to_change_direction('right'):
+            self.direction = 'right'
+            self.image = self.image_right
 
     def draw(self):
         self.game.screen.blit(self.image, (self.rect.x, self.rect.y))
@@ -181,23 +196,10 @@ class Player:
                     self.ghost_eaten += 1
 
 
-class Ghost:
+class Ghost(MovingObject):
     def __init__(self, game):
-        positionx, positiony = RED_GHOST_STARTING_POSITION
-        self.rect = pygame.Rect(positionx, positiony, GHOST_WIDTH, GHOST_HEIGHT)
-        self.game = game
-        self.starting_pos = RED_GHOST_STARTING_POSITION
-        self.player_position = self.game.player.map_position()
-        self.direction = None
-        self.color = RED
+        super().__init__(game)
         self.mode = 'normal'
-        self.speed = PLAYERS_SPEED
-        self.name = 'red'
-
-    def map_position(self):
-        x_map_pos = self.rect.x // 20
-        y_map_pos = (self.rect.y - TOP_EMPTY_SPACE) // 20
-        return (x_map_pos, y_map_pos)
 
     def starting_map_position(self):
         return (self.starting_pos[0] // 20, self.starting_pos[1] // 20)
@@ -219,9 +221,6 @@ class Ghost:
             return self.starting_map_position()
         else:
             return self.normal_destination()
-
-    def normal_destination(self):
-        return self.game.player.map_position()
 
     def move(self):
         # print(self.destination())
@@ -258,36 +257,7 @@ class Ghost:
         elif self.direction == 'up':
             self.rect.y -= 1
 
-    def able_to_move(self):
-        x, y = self.map_position()
-        if (self.rect.x % 20 == 0 and self.rect.y % 20 == 0):
-            if self.direction == 'left':
-                return not self.game.map_dict[(x - 1, y)] == '1'
-            elif self.direction == 'right':
-                return not self.game.map_dict[(x + 1, y)] == '1'
-            elif self.direction == 'up':
-                return not self.game.map_dict[(x, y - 1)] == '1'
-            elif self.direction == 'down':
-                return not self.game.map_dict[(x, y + 1)] == '1'
-        else:
-            return True
-
-    def able_to_change_direction(self, direction):
-        x, y = self.map_position()
-        if self.rect.x % 20 == 0 and self.rect.y % 20 == 0:
-            if direction == 'left':
-                return not self.game.map_dict[(x - 1, y)] == '1'
-            elif direction == 'right':
-                return not self.game.map_dict[(x + 1, y)] == '1'
-            elif direction == 'up':
-                return not self.game.map_dict[(x, y - 1)] == '1'
-            elif direction == 'down':
-                return not self.game.map_dict[(x, y + 1)] == '1'
-        else:
-            return False
-
     def find_path(self):
-        # print(self.destination(), self.__class__)
         upright_road = fabs(self.destination()[1] - self.map_position()[1])
         horizontal_road = fabs(self.destination()[0] - self.map_position()[0])
         turning_hierarchy = []
@@ -317,30 +287,6 @@ class Ghost:
     def random_path(self):
         return sample(['left', 'right', 'up', 'down'], k=4)
 
-    def is_opposite(self, direction):
-        if self.direction == 'left':
-            if direction == 'right':
-                return True
-        if self.direction == 'right':
-            if direction == 'left':
-                return True
-        if self.direction == 'up':
-            if direction == 'down':
-                return True
-        if self.direction == 'down':
-            if direction == 'up':
-                return True
-
-    def opposite(self, direction):
-        if direction == 'left':
-            return 'right'
-        if direction == 'right':
-            return 'left'
-        if direction == 'down':
-            return 'up'
-        if direction == 'up':
-            return 'down'
-
     def scared_mode(self):
         self.mode = 'scared'
         self.speed = 1
@@ -353,6 +299,22 @@ class Ghost:
     def dead_mode(self):
         self.mode = 'dead'
         self.speed = 4
+
+
+class GhostRed(Ghost):
+    def __init__(self, game):
+        super().__init__(game)
+        x, y = RED_GHOST_STARTING_POSITION
+        self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
+        self.starting_pos = RED_GHOST_STARTING_POSITION
+        self.player_position = self.game.player.map_position()
+        self.color = RED
+        self.mode = 'normal'
+        self.name = 'red'
+
+    def normal_destination(self):
+        return self.game.player.map_position()
+
 
 
 class GhostPink(Ghost):
@@ -395,15 +357,6 @@ class GhostOrange(Ghost):
         self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
         self.color = ORANGE
         self.name = 'orange'
-        # self.game = game
-        # x, y = ORANGE_GHOST_STARTING_POSITION
-        # self.starting_pos = ORANGE_GHOST_STARTING_POSITION
-        # self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
-        # self.direction = None
-        # self.color = ORANGE
-        # self.mode = 'normal'
-        # self.speed = PLAYERS_SPEED
-        # self.name = 'orange'
 
     def normal_destination(self):
         if self.road_to_player() > 5:
@@ -454,27 +407,27 @@ class GhostBlue(Ghost):
             return (self.game.player.map_position()[0], self.game.player.map_position()[1] + 2)
 
 class Wall:
-    def __init__(self, posx, posy):
+    def __init__(self, posx, posy, game):
         self.width = WALL_SIDE_LENGHT
         self.height = WALL_SIDE_LENGHT
         self.rect = pygame.Rect(posx, posy, WALL_SIDE_LENGHT, WALL_SIDE_LENGHT)
+        self.game = game
+        # image = 'wall.PNG'
+        # image = pygame.image.load(image)
+        # image = pygame.transform.scale(image, (PLAYERS_WIDTH, PLAYERS_HEIGHT))
+        # self.image = image
 
-    # def display_wall(self, screen):
-    #     screen.
-
+    def draw(self):
+        pygame.draw.rect(self.game.screen, BLUE, self.rect)
+        # self.game.screen.blit(self.image, (self.rect.x, self.rect.y))
 
 class EatableObject:
     def __init__(self, positionx, positiony, game):
         self.rect = pygame.Rect(positionx, positiony, CELL_LENGHT, CELL_LENGHT)
         self.game = game
         self.radius = 0
-        # image = pygame.image.load('coin.png')
-        # image = pygame.transform.scale(image, (3, 3))
-        # self.image = image
 
     def draw(self):
-        # if not self.eaten:
-            # self.game.screen.blit(self.image, (self.rect.x + 7, self.rect.y + 7))
         pygame.draw.circle(self.game.screen, YELLOW, (self.rect.x + 10, self.rect.y + 10), self.radius)
 
 
@@ -491,12 +444,3 @@ class PowerupCoin(EatableObject):
         self.value = POWERUP_VALUE
         self.radius = 6
 
-
-class Fruit(EatableObject):
-    def __init__(self, positionx, positiony, game, image):
-        super().__init__(positionx, positiony, game)
-        self.value = FRUIT_VALUE
-        self.image = image
-
-    def draw(self):
-        self.game.screen.blit(self.image, (self.rect.x, self.rect.y))
