@@ -1,13 +1,9 @@
-from curses import KEY_MARK
-from datetime import date
 import json
-from turtle import pos
-from matplotlib.font_manager import json_dump
 import pygame
-from pygame.event import Event
+import csv
 from pacman import Coin, EatableObject, Ghost, GhostBlue, GhostOrange, GhostPink, GhostRed, Player, PowerupCoin, Wall
 from settings import (
-    BLACK, BLUE, GHOST_HEIGHT, GHOST_WIDTH, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
+    BLACK, BLUE, CELL_LENGHT, GHOST_HEIGHT, GHOST_WIDTH, GREEN, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
     MAZE_WIDTH, MAZE_HEIGHT,
     PLAYERS_HEIGHT,
     PLAYERS_SPEED,
@@ -15,7 +11,6 @@ from settings import (
     PLAYERS_WIDTH, TOP_EMPTY_SPACE, WALL_SIDE_LENGHT,
     WHITE, YELLOW, frightened_mode, normal_mode
 )
-
 pygame.init()
 pygame.font.init()
 
@@ -28,6 +23,7 @@ class Game:
         self.walls = []
         self.coins = []
         self.ghosts = []
+        self.name = ''
         self.map = 1
         self.load_images()
         screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -80,15 +76,13 @@ class Game:
                     self.running = False
                     print(self.player.score)
                 if frightened_mode == event.type:
-                    print('kek')
                     pygame.time.set_timer(normal_mode, 6000, loops=1)
                     for ghost in self.ghosts:
-                        if not ghost.mode == 'dead':
+                        if not ghost.mode() == 'dead':
                             ghost.scared_mode()
                 elif normal_mode == event.type:
-                    print('xD')
                     for ghost in self.ghosts:
-                        if not ghost.mode == 'dead':
+                        if not ghost.mode() == 'dead':
                             ghost.normal_mode()
                         self.player.ghost_eaten = 0
                 if self.state == 'game':
@@ -113,6 +107,9 @@ class Game:
             elif self.state == 'win':
                 self.display_win_screen()
                 self.update_win_screen()
+            elif self.state == 'highscore':
+                self.display_highscore_screen()
+                self.update_highscore_screen()
             self.clock.tick(FPS)
         pygame.quit()
 
@@ -137,7 +134,7 @@ class Game:
         for ghost in self.ghosts:
             ghost_data = {
                 'direction': ghost.direction,
-                'mode': ghost.mode,
+                'mode': ghost.mode(),
                 'position': ghost.map_position(),
                 'name': ghost.name
             }
@@ -149,15 +146,15 @@ class Game:
             'ghosts_data': ghosts_data,
             'map': map
         }
-        print(map)
+        # print(map)
         with open('save.txt', 'w') as file_handle:
             json.dump(game_data, file_handle)
 
     def load_game(self):
         with open('save.txt') as handle:
             file_handle = json.load(handle)
-            player_positionx = file_handle['player_position'][0] * 20
-            player_positiony = file_handle['player_position'][1] * 20 + TOP_EMPTY_SPACE
+            player_positionx = file_handle['player_position'][0] * CELL_LENGHT
+            player_positiony = file_handle['player_position'][1] * CELL_LENGHT + TOP_EMPTY_SPACE
             score = file_handle['score']
             map = file_handle['map']
             self.map = map
@@ -176,7 +173,6 @@ class Game:
         self.player.score = score
         self.player.rect = pygame.Rect(x, y, PLAYERS_WIDTH, PLAYERS_WIDTH)
 
-
     def load_coin(self, coin_data):
         posx = coin_data['pos'][0]
         posy = coin_data['pos'][1]
@@ -187,8 +183,8 @@ class Game:
 
     def load_ghost(self, ghost_data):
         name = ghost_data['name']
-        posx = ghost_data['position'][0] * 20
-        posy = ghost_data['position'][1] * 20 + TOP_EMPTY_SPACE
+        posx = ghost_data['position'][0] * CELL_LENGHT
+        posy = ghost_data['position'][1] * CELL_LENGHT + TOP_EMPTY_SPACE
         mode = ghost_data['mode']
         direction = ghost_data['direction']
         if name == 'red':
@@ -218,7 +214,7 @@ class Game:
         for ghost in self.ghosts:
             ghost.move()
         if len(self.coins) == 0:
-            if self.map < 3:
+            if self.map < 4:
                 self.map += 1
                 self.load_map()
                 self.back_to_start()
@@ -232,6 +228,8 @@ class Game:
             self.create_map('map1.txt')
         elif self.map == 2:
             self.create_map('map2.txt')
+        elif self.map == 3:
+            self.create_map('map3.txt')
 
     def display_screen(self):
         """
@@ -252,14 +250,18 @@ class Game:
         self.player.draw()
         for ghost in self.ghosts:
             ghost.draw()
+        # for i in range(40):
+        #     x = i * (MAZE_WIDTH//28)
+        #     pygame.draw.line(self.screen, (255, 0, 0), (x, 0), (x, MAZE_HEIGHT)) # pionowe
+        #     pygame.draw.line(self.screen, (0, 255, 0), (0, x), (MAZE_WIDTH, x))
         self.draw_text('Arial Black', 40, f'SCORE: {self.player.score}', WHITE, 10, 5, True)
         pygame.display.update()
 
     def load_images(self):
         self.player_image = 'pacman_player.png'
-        background = pygame.image.load('maze.png')
-        background = pygame.transform.scale(background, (MAZE_WIDTH, MAZE_HEIGHT))
-        self.background = background
+        # background = pygame.image.load('maze.png')
+        # background = pygame.transform.scale(background, (MAZE_WIDTH, MAZE_HEIGHT))
+        # self.background = background
         self.icon = pygame.image.load('pacman.png')
 
     def draw_text(self, font_name, size, message, color, positionx, positiony, centered=False):
@@ -272,7 +274,7 @@ class Game:
 
     def display_start_screen(self):
         self.screen.fill(BLACK)
-        self.draw_text('Georgia Pro Black', 50, 'PUSH SPACEBAR TO START', YELLOW,
+        self.draw_text('Georgia Pro Black', 50, 'SPACE TO START', YELLOW,
         100, 300, True)
         self.draw_text('Georgia Pro Black', 50, 'L TO LOAD', YELLOW,
         100, 600, True)
@@ -282,14 +284,15 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            # if event.type
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                self.start_new_game()
-                self.state = 'game'
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_l:
-                self.load_game()
-                self.state = 'game'
-
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    self.start_new_game()
+                    self.state = 'game'
+                if event.key == pygame.K_l:
+                    self.load_game()
+                    self.state = 'game'
+                if event.key == pygame.K_h:
+                    self.state = 'highscore'
 
     def back_to_start(self):
         self.player.rect = pygame.Rect(PLAYERS_STARTING_POSITION[0], PLAYERS_STARTING_POSITION[1], PLAYERS_WIDTH, PLAYERS_HEIGHT)
@@ -297,33 +300,44 @@ class Game:
             ghost.rect = pygame.Rect(ghost.starting_pos[0], ghost.starting_pos[1], GHOST_WIDTH, GHOST_HEIGHT)
             ghost.normal_mode()
 
-        if self.player.lives < 1:
-            self.state = 'game over'
-
     def display_game_over(self):
         self.screen.fill(BLACK)
-        self.draw_text('Georgia Pro Black', 50, 'GAME OVER', RED,
-        100, 300, True)
+        self.draw_text('Georgia Pro Black', 100, 'GAME OVER', RED,
+        100, 100, True)
         self.draw_text('Georgia Pro Black', 50, 'PUSH SPACE TO START OVER', RED,
         100, 500, True)
+        self.change_name_interface()
         pygame.display.update()
 
     def update_game_over(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            # if event.type
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                self.write_highscore()
-                self.reset()
-                self.state = 'game'
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    self.write_highscore()
+                    self.reset()
+                    self.state = 'start'
+                else:
+                    self.change_name(event)
+
+    def change_name_interface(self):
+        self.draw_text('Georgia Pro Black', 50, 'ENTER YOUR NAME:', YELLOW,
+        100, 250, True)
+        self.draw_text('Georgia Pro Black', 50, self.name, YELLOW, 300, 300, True)
+
+    def change_name(self, event):
+        if event.key == pygame.K_BACKSPACE:
+            self.name = self.name[0:-1]
+        else:
+            self.name += event.unicode
 
     def reset(self):
         self.coins = []
         self.walls = []
         self.map = 1
         self.load_map()
-        self.player.lives = 2
+        self.player.lives = 3
         self.player.score = 0
         self.player.rect = pygame.Rect(PLAYERS_STARTING_POSITION[0], PLAYERS_STARTING_POSITION[1], PLAYERS_WIDTH, PLAYERS_HEIGHT)
         for ghost in self.ghosts:
@@ -334,21 +348,75 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                self.reset()
-                self.state = 'game'
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    self.write_highscore()
+                    self.reset()
+                    self.state = 'start'
+                else:
+                    self.change_name(event)
 
     def display_win_screen(self):
         self.screen.fill(BLACK)
-        self.draw_text('Georgia Pro Black', 50, 'YOU WON', BLUE,
-        100, 300, True)
-        self.draw_text('Georgia Pro Black', 50, 'PUSH SPACE TO START AGAIN', WHITE,
+        self.draw_text('Georgia Pro Black', 100, 'YOU WON', BLUE,
+        100, 100, True)
+        self.draw_text('Georgia Pro Black', 50, 'PUSH SPACE TO START AGAIN', GREEN,
         100, 500, True)
+        self.change_name_interface()
         pygame.display.update()
 
     def write_highscore(self):
-        with open('highscore.txt', '+a') as file_handle:
-            file_handle.write(f', {self.player.score}')
+        with open('highscore.txt', 'a') as file_handle:
+            writer = csv.DictWriter(file_handle, ['name', 'score'])
+            writer.writerow({
+                'name': self.name,
+                'score': self.player.score
+            })
+
+    def read_highscore(self):
+        with open('highscore.txt', 'r') as file_handle:
+            reader = csv.DictReader(file_handle)
+            names = []
+            scores = []
+            for row in reader:
+                name = row['name']
+                score = int(row['score'])
+                names.append(name)
+                scores.append(score)
+            return names, scores
+
+    def find_8_highscores(self):
+        names, scores = self.read_highscore()
+        scores_sorted = sorted(zip(scores, names), reverse=True)
+        highscores = []
+        try:
+            for i in range(8):
+                highscores.append(scores_sorted[i])
+        except IndexError:
+            pass
+        return highscores
+
+    def update_highscore_screen(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.state = 'start'
+
+    def display_highscore_screen(self):
+        self.screen.fill(BLACK)
+        highscores = self.find_8_highscores()
+        i = 0
+        for score in highscores:
+            name = score[1]
+            score = str(score[0])
+            self.draw_text('Georgia Pro Black', 50, name, WHITE,
+        10, 80*i)
+            self.draw_text('Georgia Pro Black', 50, score, YELLOW,
+        200, 80*i)
+            i += 1
+        pygame.display.update()
 
 
 if __name__ == '__main__':

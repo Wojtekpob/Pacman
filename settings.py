@@ -32,6 +32,7 @@ PINK = (252, 0, 215)
 ORANGE = (252, 186, 3)
 TURQUOISE = (24, 199, 187)
 BLUE = (0, 11, 212)
+GREEN = (52, 235, 61)
 
 
 # GHOSTS ##

@@ -1,1 +1,10 @@
-110, 150
+name,score
+aaa,110
+bbbb,110
+cccc,130
+lomza,110
+qqqq,190
+pierszy,520
+xd,660
+xdwwww,270
+xxvvb,1890

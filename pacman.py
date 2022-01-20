@@ -1,4 +1,3 @@
-from statistics import mode
 import pygame
 from pygame import K_LEFT, K_RIGHT, K_SPACE, K_UP, KEYDOWN, USEREVENT, K_s, Rect, key, rect
 from math import fabs, sqrt
@@ -76,10 +75,12 @@ class MovingObject:
             return 'down'
 
     def teleport_back_to_map(self):
-        if self.map_position()[0] < 0:
-            self.rect.x = 560
-        elif self.map_position()[0] > 28:
-            self.rect.x = 0
+        if self.rect.x < 20:
+            self.rect.x = 540
+            self.direction = 'left'
+        elif self.rect.x > 540:
+            self.rect.x = 20
+            self.direction = 'right'
 
 
 
@@ -106,7 +107,7 @@ class Player(MovingObject):
         self.image_up = pygame.transform.rotate(image, 90)
         self.image_down = pygame.transform.rotate(image, 270)
         self.rect = pygame.Rect(PLAYERS_STARTING_POSITION[0], PLAYERS_STARTING_POSITION[1], PLAYERS_WIDTH, PLAYERS_HEIGHT)
-        self.lives = 2
+        self.lives = 3
         self.score = 0
         self.ghost_eaten = 0
 
@@ -118,7 +119,6 @@ class Player(MovingObject):
         """
         self.teleport_back_to_map()
         self.change_direction(keys_pressed)
-        # if self.able_to_move(self.direction):
         for _ in range(self.speed):
             if self.able_to_move():
                 if self.direction == 'right':
@@ -129,7 +129,6 @@ class Player(MovingObject):
                     self.rect.y += 1
                 elif self.direction == 'up':
                     self.rect.y -= 1
-        # self.move_sensors()
 
     def next_direction(self, keys_pressed):
         if keys_pressed[pygame.K_a] or keys_pressed[K_LEFT]:
@@ -174,23 +173,19 @@ class Player(MovingObject):
             if eat_rect.colliderect(coin.rect):
                 if isinstance(coin, PowerupCoin):
                     pygame.time.set_timer(frightened_mode, 1, loops=1)
-                # for event in pygame.event.get():
-                    # if frightened_mode.type == event.type:
-                    #     print('kek')
-                    #     pygame.event.pump()
-                    # pass
                 self.game.coins.remove(coin)
                 self.score += coin.value
-        # print(pygame.event.get())
 
     def ghost_interaction(self):
-        eat_rect = pygame.Rect(self.rect.x, self.rect.y, PLAYERS_WIDTH - 10, PLAYERS_HEIGHT - 10)
+        eat_rect = pygame.Rect(self.rect.x + 10, self.rect.y + 10, PLAYERS_WIDTH - 18, PLAYERS_HEIGHT - 18)
         for ghost in self.game.ghosts:
             if eat_rect.colliderect(ghost.rect):
-                if ghost.mode == 'normal':
+                if ghost.mode() == 'normal':
                     self.game.back_to_start()
                     self.lives -= 1
-                elif ghost.mode == 'scared':
+                    if self.lives < 1:
+                        self.game.state = 'game over'
+                elif ghost.mode() == 'scared':
                     ghost.dead_mode()
                     self.score += 200 * (self.ghost_eaten + 1)
                     self.ghost_eaten += 1
@@ -199,14 +194,14 @@ class Player(MovingObject):
 class Ghost(MovingObject):
     def __init__(self, game):
         super().__init__(game)
-        self.mode = 'normal'
+        self._mode = 'normal'
 
     def starting_map_position(self):
         return (self.starting_pos[0] // 20, self.starting_pos[1] // 20)
 
     def draw(self):
-        if not self.mode == 'dead':
-            color = BLUE if self.mode == 'scared' else self.color
+        if not self.mode() == 'dead':
+            color = BLUE if self.mode() == 'scared' else self.color
             pygame.draw.circle(self.game.screen, color, (self.rect.x + 10, self.rect.y + 10), GHOST_RADIOUS)
             pygame.draw.circle(self.game.screen, WHITE, (self.rect.x + 6, self.rect.y + 8), 2)
             pygame.draw.circle(self.game.screen, WHITE, (self.rect.x + 14, self.rect.y + 8), 2)
@@ -215,7 +210,7 @@ class Ghost(MovingObject):
             pygame.draw.circle(self.game.screen, WHITE, (self.rect.x + 14, self.rect.y + 8), GHOST_RADIOUS - 7)
 
     def destination(self):
-        if self.mode == 'dead':
+        if self.mode() == 'dead':
             if self.map_position()[1] == 11 and self.map_position()[0] < 15 and self.map_position()[0] > 11:
                 self.normal_mode()
             return self.starting_map_position()
@@ -223,17 +218,6 @@ class Ghost(MovingObject):
             return self.normal_destination()
 
     def move(self):
-        # print(self.destination())
-        # print(self.rect.x, self.rect.y)
-        # if (self.rect.x % 20 == 0 and self.rect.y % 20 == 0):
-        #     if self.mode == 'scared':
-        #         self.speed = 1
-        # if self.rect.x % 20 == 0 and self.rect.y % 20 == 0:
-        #     if self.mode == 'scared':
-        #         self.speed = 1
-        #         print('scared')
-        #     elif self.mode == 'normal' or self.mode == 'dead':
-        #         self.speed = 2
         turning_hierarchy = self.random_path() if self.mode == 'scared' else self.find_path()
         if self.able_to_change_direction(turning_hierarchy[0]) and not self.is_opposite(turning_hierarchy[0]):
             self.direction = turning_hierarchy[0]
@@ -288,17 +272,20 @@ class Ghost(MovingObject):
         return sample(['left', 'right', 'up', 'down'], k=4)
 
     def scared_mode(self):
-        self.mode = 'scared'
+        self._mode = 'scared'
         self.speed = 1
         self.direction = self.opposite(self.direction)
 
     def normal_mode(self):
-        self.mode = 'normal'
+        self._mode = 'normal'
         self.speed = PLAYERS_SPEED
 
     def dead_mode(self):
-        self.mode = 'dead'
+        self._mode = 'dead'
         self.speed = 4
+
+    def mode(self):
+        return self._mode
 
 
 class GhostRed(Ghost):
@@ -309,7 +296,6 @@ class GhostRed(Ghost):
         self.starting_pos = RED_GHOST_STARTING_POSITION
         self.player_position = self.game.player.map_position()
         self.color = RED
-        self.mode = 'normal'
         self.name = 'red'
 
     def normal_destination(self):
@@ -325,15 +311,6 @@ class GhostPink(Ghost):
         self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
         self.color = PINK
         self.name = 'pink'
-        # self.game = game
-        # x, y = PINK_GHOST_STARTING_POSITION
-        # self.starting_pos = PINK_GHOST_STARTING_POSITION
-        # self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
-        # self.direction = None
-        # self.color = PINK
-        # self.mode = 'normal'
-        # self.speed = PLAYERS_SPEED
-        # self.name = 'pink'
 
     def normal_destination(self):
         if self.game.player.direction == 'left':
@@ -344,10 +321,6 @@ class GhostPink(Ghost):
             return (self.game.player.map_position()[0], self.game.player.map_position()[1] - 4)
         elif self.game.player.direction == 'down':
             return (self.game.player.map_position()[0], self.game.player.map_position()[1] + 4)
-
-    # def draw(self):
-    #     pygame.draw.circle(self.game.screen, PINK, (self.rect.x + 10, self.rect.y + 10), GHOST_RADIOUS)
-
 
 class GhostOrange(Ghost):
     def __init__(self, game):
@@ -381,15 +354,6 @@ class GhostBlue(Ghost):
         self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
         self.color = TURQUOISE
         self.name = 'blue'
-        # self.game = game
-        # self.direction = None
-        # self.mode = 'normal'
-        # self.starting_pos = BLUE_GHOST_STARTING_POSITION
-        # x, y = BLUE_GHOST_STARTING_POSITION
-        # self.rect = pygame.Rect(x, y, GHOST_WIDTH, GHOST_HEIGHT)
-        # self.color = TURQUOISE
-        # self.speed = PLAYERS_SPEED
-        # self.name = 'blue'
 
     def normal_destination(self):
         a, b = self.two_cells_in_front_of_player()
@@ -406,13 +370,14 @@ class GhostBlue(Ghost):
         elif self.game.player.direction == 'down':
             return (self.game.player.map_position()[0], self.game.player.map_position()[1] + 2)
 
+
 class Wall:
     def __init__(self, posx, posy, game):
         self.width = WALL_SIDE_LENGHT
         self.height = WALL_SIDE_LENGHT
         self.rect = pygame.Rect(posx, posy, WALL_SIDE_LENGHT, WALL_SIDE_LENGHT)
         self.game = game
-        # image = 'wall.PNG'
+        # image = 'pacman_player.png'
         # image = pygame.image.load(image)
         # image = pygame.transform.scale(image, (PLAYERS_WIDTH, PLAYERS_HEIGHT))
         # self.image = image
@@ -420,6 +385,7 @@ class Wall:
     def draw(self):
         pygame.draw.rect(self.game.screen, BLUE, self.rect)
         # self.game.screen.blit(self.image, (self.rect.x, self.rect.y))
+
 
 class EatableObject:
     def __init__(self, positionx, positiony, game):
@@ -443,4 +409,3 @@ class PowerupCoin(EatableObject):
         super().__init__(positionx, positiony, game)
         self.value = POWERUP_VALUE
         self.radius = 6
-
