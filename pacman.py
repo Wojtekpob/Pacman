@@ -63,6 +63,8 @@ class MovingObject:
     def is_opposite(self, direction):
         if self.direction == self.opposite(direction):
             return True
+        else:
+            return False
 
     def opposite(self, direction):
         if direction == 'left':
@@ -341,9 +343,6 @@ class GhostOrange(Ghost):
         road_horizontal = self.game.player.map_position()[0] - self.map_position()[0]
         road_vertical = self.game.player.map_position()[1] - self.map_position()[1]
         return sqrt(road_horizontal ** 2 + road_vertical ** 2)
-
-    # def draw(self):
-    #     pygame.draw.circle(self.game.screen, ORANGE, (self.rect.x + 10, self.rect.y + 10), GHOST_RADIOUS)
 
 
 class GhostBlue(Ghost):

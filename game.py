@@ -3,7 +3,7 @@ import pygame
 import csv
 from pacman import Coin, EatableObject, Ghost, GhostBlue, GhostOrange, GhostPink, GhostRed, Player, PowerupCoin, Wall
 from settings import (
-    BLACK, BLUE, CELL_LENGHT, GHOST_HEIGHT, GHOST_WIDTH, GREEN, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
+    BLACK, BLUE, CELL_LENGHT, GHOST_HEIGHT, GHOST_WIDTH, GREEN, ORANGE, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
     MAZE_WIDTH, MAZE_HEIGHT,
     PLAYERS_HEIGHT,
     PLAYERS_SPEED,
@@ -162,6 +162,7 @@ class Game:
             self.load_map()
             ghosts_data = file_handle['ghosts_data']
             self.coins = []
+            self.ghosts = []
             for coin_data in file_handle['coins']:
                 self.load_coin(coin_data)
             for ghost_data in ghosts_data:
@@ -214,6 +215,7 @@ class Game:
         for ghost in self.ghosts:
             ghost.move()
         if len(self.coins) == 0:
+            self.player.score += 2000
             if self.map < 4:
                 self.map += 1
                 self.load_map()
@@ -259,9 +261,6 @@ class Game:
 
     def load_images(self):
         self.player_image = 'pacman_player.png'
-        # background = pygame.image.load('maze.png')
-        # background = pygame.transform.scale(background, (MAZE_WIDTH, MAZE_HEIGHT))
-        # self.background = background
         self.icon = pygame.image.load('pacman.png')
 
     def draw_text(self, font_name, size, message, color, positionx, positiony, centered=False):
@@ -327,10 +326,11 @@ class Game:
         self.draw_text('Georgia Pro Black', 50, self.name, YELLOW, 300, 300, True)
 
     def change_name(self, event):
-        if event.key == pygame.K_BACKSPACE:
-            self.name = self.name[0:-1]
-        else:
-            self.name += event.unicode
+        if not len(self.name) > 8:
+            if event.key == pygame.K_BACKSPACE:
+                self.name = self.name[0:-1]
+            else:
+                self.name += event.unicode
 
     def reset(self):
         self.coins = []
@@ -366,12 +366,13 @@ class Game:
         pygame.display.update()
 
     def write_highscore(self):
-        with open('highscore.txt', 'a') as file_handle:
-            writer = csv.DictWriter(file_handle, ['name', 'score'])
-            writer.writerow({
-                'name': self.name,
-                'score': self.player.score
-            })
+        if self.name:
+            with open('highscore.txt', 'a') as file_handle:
+                writer = csv.DictWriter(file_handle, ['name', 'score'])
+                writer.writerow({
+                    'name': self.name,
+                    'score': self.player.score
+                })
 
     def read_highscore(self):
         with open('highscore.txt', 'r') as file_handle:
@@ -411,10 +412,12 @@ class Game:
         for score in highscores:
             name = score[1]
             score = str(score[0])
-            self.draw_text('Georgia Pro Black', 50, name, WHITE,
-        10, 80*i)
-            self.draw_text('Georgia Pro Black', 50, score, YELLOW,
-        200, 80*i)
+            self.draw_text('Georgia Pro Black', 80, name, WHITE,
+        10, 100 + 80*i)
+            self.draw_text('Georgia Pro Black', 80, score, YELLOW,
+        350, 100 + 80*i)
+            self.draw_text('Georgia Pro Black', 100, 'HIGHSCORES', ORANGE,
+        10, 0, True)
             i += 1
         pygame.display.update()
 
