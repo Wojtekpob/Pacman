@@ -273,10 +273,12 @@ class Game:
 
     def display_start_screen(self):
         self.screen.fill(BLACK)
-        self.draw_text('Georgia Pro Black', 50, 'SPACE TO START', YELLOW,
-        100, 300, True)
-        self.draw_text('Georgia Pro Black', 50, 'L TO LOAD', YELLOW,
+        self.draw_text('Georgia Pro Black', 80, 'SPACE TO START', YELLOW,
+        100, 100, True)
+        self.draw_text('Georgia Pro Black', 50, 'L TO LOAD SAVED GAME', YELLOW,
         100, 600, True)
+        self.draw_text('Georgia Pro Black', 50, 'H TO SEE HIGHSCORES', YELLOW,
+        100, 400, True)
         pygame.display.update()
 
     def update_state_start(self):
@@ -326,7 +328,7 @@ class Game:
         self.draw_text('Georgia Pro Black', 50, self.name, YELLOW, 300, 300, True)
 
     def change_name(self, event):
-        if not len(self.name) > 8:
+        if not len(self.name) > 8 or event.key == pygame.K_BACKSPACE:
             if event.key == pygame.K_BACKSPACE:
                 self.name = self.name[0:-1]
             else:
@@ -413,11 +415,13 @@ class Game:
             name = score[1]
             score = str(score[0])
             self.draw_text('Georgia Pro Black', 80, name, WHITE,
-        10, 100 + 80*i)
+        10, 80 + 80*i)
             self.draw_text('Georgia Pro Black', 80, score, YELLOW,
-        350, 100 + 80*i)
+        350, 80 + 80*i)
             self.draw_text('Georgia Pro Black', 100, 'HIGHSCORES', ORANGE,
         10, 0, True)
+            self.draw_text('Georgia Pro Black', 40, 'ESCAPE TO BACK', BLUE,
+        10, 690, True)
             i += 1
         pygame.display.update()
 
