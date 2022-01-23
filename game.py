@@ -1,9 +1,10 @@
 import json
+from pickle import TRUE
 import pygame
 import csv
 from pacman import Coin, EatableObject, Ghost, GhostBlue, GhostOrange, GhostPink, GhostRed, Player, PowerupCoin, Wall
 from settings import (
-    BLACK, BLUE, CELL_LENGHT, GHOST_HEIGHT, GHOST_WIDTH, GREEN, ORANGE, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
+    BLACK, BLUE, CELL_LENGHT, DARK_GREEN, GHOST_HEIGHT, GHOST_WIDTH, GREEN, ORANGE, PAUSE_RECT_SIDE, RED, RED_GHOST_STARTING_POSITION, SCREEN_WIDTH, SCREEN_HEIGHT, FPS,
     MAZE_WIDTH, MAZE_HEIGHT,
     PLAYERS_HEIGHT,
     PLAYERS_SPEED,
@@ -17,6 +18,12 @@ pygame.font.init()
 
 class Game:
     def __init__(self):
+        """
+        while creating game it initializes clock, sets running to True, pause to False,
+        initializes walls, coins, ghosts lists and name, sets map to first, alse creates
+        pygame display instantion and sets it's sie, icon and caption and makes the screen
+        atribute so other functions can use it to display things, sets state to start screen.
+        """
         self.clock = pygame.time.Clock()
         self.running = True
         self.pause = False
@@ -32,22 +39,22 @@ class Game:
         self.screen = screen
         self.state = 'start'
 
-    def start_new_game(self):
-        self.initialize_game()
-
     def initialize_game(self):
+        """
+        This method initializes player and ghosts instantions, loads the map proper map,
+        it is used to start a new game.
+        """
         self.player = Player(self.player_image, self)
         self.ghosts = [GhostRed(self), GhostOrange(self), GhostPink(self), GhostBlue(self)]
         self.load_map()
 
-    def create_player_ghosts(self):
-        """
-        Creates object that can move that will represent player.
-        """
-        self.player = Player(self.player_image, self)
-        # self.ghosts = [GhostRed(self), GhostOrange(self), GhostPink(self), GhostBlue(self)]
-
     def create_map(self, maze_map):
+        """
+        Creates map from maps txt files by reading it and creating wall objects for each 1,
+        normal coins objects for 2, powerup coins for 3 and does nothing for 0,
+        also creates or replaces map dictionary so the moving objects can see the enviroment,
+        also replaces or makes walls and coins lists so the game can iteract with it.
+        """
         map_dict = {}
         self.walls = []
         self.coins = []
@@ -95,12 +102,8 @@ class Game:
                 self.update_game()
                 while self.pause:
                     self.save_game()
-                    for event in pygame.event.get():
-                        if event.type == pygame.QUIT:
-                            self.running = False
-                            self.pause = False
-                        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                            self.pause = False
+                    self.display_pause()
+                    self.update_pause()
             elif self.state == 'game over':
                 self.display_game_over()
                 self.update_game_over()
@@ -112,6 +115,25 @@ class Game:
                 self.update_highscore_screen()
             self.clock.tick(FPS)
         pygame.quit()
+
+    def display_pause(self):
+        y_rect_position = (SCREEN_HEIGHT - TOP_EMPTY_SPACE - PAUSE_RECT_SIDE) // 2
+        x_rect_position = (SCREEN_WIDTH - PAUSE_RECT_SIDE) // 2
+        pause_rect = pygame.Rect(x_rect_position, y_rect_position, PAUSE_RECT_SIDE, PAUSE_RECT_SIDE)
+        pygame.draw.rect(self.screen, DARK_GREEN, pause_rect)
+        self.draw_text('Georgia Pro Black', 130, "PAUSED", WHITE, 1, 200, True)
+        self.draw_text('Georgia Pro Black', 60, "SPACE TO CONTINUE", WHITE, 1, 400, True)
+        pygame.display.update()
+
+    def update_pause(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+                self.pause = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                self.pause = False
+            if event.type == normal_mode:
+                pygame.time.set_timer(normal_mode, 6000, loops=1)
 
     def save_game(self):
         player_position = self.player.map_position()
@@ -279,6 +301,8 @@ class Game:
         100, 600, True)
         self.draw_text('Georgia Pro Black', 50, 'H TO SEE HIGHSCORES', YELLOW,
         100, 400, True)
+        self.draw_text('Georgia Pro Black', 30, 'By Wojciech Pobocha', WHITE,
+        340, 700)
         pygame.display.update()
 
     def update_state_start(self):
@@ -287,7 +311,7 @@ class Game:
                 self.running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    self.start_new_game()
+                    self.initialize_game()
                     self.state = 'game'
                 if event.key == pygame.K_l:
                     self.load_game()
