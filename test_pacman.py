@@ -1,32 +1,33 @@
-from telnetlib import GA
-from matplotlib.pyplot import sca
 import pygame
 from pacman import (
 MovingObject, Player, Ghost,
 GhostBlue, GhostOrange,
 GhostPink, GhostRed)
 from game import Game
-from settings import *
+from settings import PLAYERS_WIDTH, PLAYERS_HEIGHT, PLAYER_PHOTO, PLAYERS_STARTING_POSITION
+from settings import RED_GHOST_STARTING_POSITION, TOP_EMPTY_SPACE
 
 
 def test_map_positon_00():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(0, 60, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.map_position() == (0, 0)
+
 
 def test_map_positon_11():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 80, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.map_position() == (1, 1)
+
 
 def test_map_positon_12():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 100, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.map_position() == (1, 2)
 
@@ -34,7 +35,7 @@ def test_map_positon_12():
 def test_map_positon_22():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(40, 100, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.map_position() == (2, 2)
 
@@ -42,7 +43,7 @@ def test_map_positon_22():
 def test_map_positon_33():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(60, 120, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.map_position() == (3, 3)
 
@@ -50,7 +51,7 @@ def test_map_positon_33():
 def test_map_position_right():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(30, 90, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.map_position() == (1, 1)
 
@@ -58,7 +59,7 @@ def test_map_position_right():
 def test_map_position_right_move():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(40, 80, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.map_position()[0] == 2
     assert pacman.map_position()[1] == 1
@@ -66,7 +67,7 @@ def test_map_position_right_move():
 def test_map_position_right_move_barely():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(39, 99, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.map_position()[0] == 1
     assert pacman.map_position()[1] == 1
@@ -75,7 +76,7 @@ def test_map_position_right_move_barely():
 def test_map_position_down_move():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 100, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.map_position()[0] == 1
     assert pacman.map_position()[1] == 2
@@ -84,7 +85,7 @@ def test_map_position_down_move():
 def test_map_position_left_move():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(0, 100, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.map_position()[0] == 0
     assert pacman.map_position()[1] == 2
@@ -92,7 +93,7 @@ def test_map_position_left_move():
 def test_map_position_up_move():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 60, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.map_position()[0] == 1
     assert pacman.map_position()[1] == 0
@@ -101,7 +102,7 @@ def test_map_position_up_move():
 def test_pacman_is_able_to_turn_right_wall_start_true():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 80, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('right') is True
 
@@ -109,7 +110,7 @@ def test_pacman_is_able_to_turn_right_wall_start_true():
 def test_pacman_is_able_to_turn_right_wall_end_true():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 160, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('right') is True
 
@@ -117,7 +118,7 @@ def test_pacman_is_able_to_turn_right_wall_end_true():
 def test_pacman_is_able_to_turn_right_wall_mid_false():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 120, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('right') is False
 
@@ -125,7 +126,7 @@ def test_pacman_is_able_to_turn_right_wall_mid_false():
 def test_pacman_is_able_to_turn_right_wall_start_false():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 90, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('right') is False
 
@@ -133,7 +134,7 @@ def test_pacman_is_able_to_turn_right_wall_start_false():
 def test_pacman_is_able_to_turn_right_wall_end_false():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 160, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('right') is True
 
@@ -141,7 +142,7 @@ def test_pacman_is_able_to_turn_right_wall_end_false():
 def test_pacman_is_able_to_turn_left_wall_end_true():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(100, 160, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('left') is True
 
@@ -149,7 +150,7 @@ def test_pacman_is_able_to_turn_left_wall_end_true():
 def test_pacman_is_able_to_turn_left_wall_start_true():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(100, 80, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('left') is True
 
@@ -157,7 +158,7 @@ def test_pacman_is_able_to_turn_left_wall_start_true():
 def test_pacman_is_able_to_turn_left_wall_mid_false():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(100, 120, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('left') is False
 
@@ -165,7 +166,7 @@ def test_pacman_is_able_to_turn_left_wall_mid_false():
 def test_pacman_is_able_to_turn_left_wall_start_false():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(100, 81, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('left') is False
 
@@ -173,7 +174,7 @@ def test_pacman_is_able_to_turn_left_wall_start_false():
 def test_pacman_is_able_to_turn_left_wall_end_false():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(100, 151, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('left') is False
 
@@ -181,7 +182,7 @@ def test_pacman_is_able_to_turn_left_wall_end_false():
 def test_pacman_is_able_to_turn_up_wall_true():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 85, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_move() is True
 
@@ -189,7 +190,7 @@ def test_pacman_is_able_to_turn_up_wall_true():
 def test_pacman_is_able_to_turn_up_wall_end_true():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(100, 160, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('up') is False
 
@@ -197,7 +198,7 @@ def test_pacman_is_able_to_turn_up_wall_end_true():
 def test_pacman_is_able_to_turn_up_wall_start_true():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 160, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('up') is True
 
@@ -205,7 +206,7 @@ def test_pacman_is_able_to_turn_up_wall_start_true():
 def test_pacman_is_able_to_turn_down_wall_start_true():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 160, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('down') is True
 
@@ -213,7 +214,7 @@ def test_pacman_is_able_to_turn_down_wall_start_true():
 def test_pacman_is_able_to_turn_down_wall_end_true():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(120, 180, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('down') is True
 
@@ -221,7 +222,7 @@ def test_pacman_is_able_to_turn_down_wall_end_true():
 def test_pacman_is_able_to_turn_up_wall_false():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 80, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('up') is False
 
@@ -229,7 +230,7 @@ def test_pacman_is_able_to_turn_up_wall_false():
 def test_pacman_is_able_to_turn_down_wall_true_1():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 200, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('down') is True
 
@@ -237,7 +238,7 @@ def test_pacman_is_able_to_turn_down_wall_true_1():
 def test_pacman_is_able_to_turn_down_wall_true_2():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 210, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_move() is True
 
@@ -245,7 +246,7 @@ def test_pacman_is_able_to_turn_down_wall_true_2():
 def test_pacman_is_able_to_turn_down_wall_false():
     game = Game()
     game.load_map()
-    pacman = Player('pacman.png', game)
+    pacman = Player(PLAYER_PHOTO, game)
     pacman.rect = pygame.Rect(20, 220, PLAYERS_WIDTH, PLAYERS_HEIGHT)
     assert pacman.able_to_change_direction('down') is False
 
@@ -293,7 +294,7 @@ def test_opposite():
 
 def test_ghost_interaction_normal_hit():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost = GhostRed(game)
     player.rect = pygame.Rect(50, 50, 50, 50)
@@ -308,7 +309,7 @@ def test_ghost_interaction_normal_hit():
 
 def test_ghost_interaction_normal_hit_game_over():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost = GhostRed(game)
     player.rect = pygame.Rect(50, 50, 50, 50)
@@ -322,7 +323,7 @@ def test_ghost_interaction_normal_hit_game_over():
 
 def test_ghost_interaction_normal_not_hit():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost = GhostRed(game)
     player.rect = pygame.Rect(50, 50, 50, 50)
@@ -337,7 +338,7 @@ def test_ghost_interaction_normal_not_hit():
 
 def test_ghost_interaction_scared_hit():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost = GhostRed(game)
     player.rect = pygame.Rect(50, 50, 50, 50)
@@ -355,7 +356,7 @@ def test_ghost_interaction_scared_hit():
 
 def test_ghost_interaction_dead_hit():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost = GhostRed(game)
     player.rect = pygame.Rect(50, 50, 50, 50)
@@ -371,7 +372,7 @@ def test_ghost_interaction_dead_hit():
 
 def test_ghost_destination():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost = GhostRed(game)
     game.ghosts = [ghost]
@@ -381,7 +382,7 @@ def test_ghost_destination():
 
 def test_ghost_destination_revive():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost = GhostRed(game)
     game.ghosts = [ghost]
@@ -402,17 +403,6 @@ def test_ghost_move_body():
     assert ghost.rect.y == RED_GHOST_STARTING_POSITION[1]
 
 
-# def test_ghost_find_path_up_left(monkeypatch):
-#     game = Game()
-#     ghost = Ghost(game)
-#     def return_set_position():
-#         return 1
-#     monkeypatch.setattr('ghost.destination()', return_set_position())
-#     # dest = ghost.destination
-#     # print(ghost.destination())
-#     assert ghost.destination() == 1
-
-
 def test_ghost_modes():
     game = Game()
     ghost = Ghost(game)
@@ -428,7 +418,7 @@ def test_ghost_modes():
 
 def test_red_ghost_normal_destination():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost = GhostRed(game)
     assert ghost.normal_destination() == player.map_position()
@@ -436,7 +426,7 @@ def test_red_ghost_normal_destination():
 
 def test_pink_ghost_normal_destination_left():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     player.rect = pygame.Rect(200, 200, 20, 20)
     player.direction = 'left'
@@ -446,7 +436,7 @@ def test_pink_ghost_normal_destination_left():
 
 def test_pink_ghost_normal_destination_right():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     player.rect = pygame.Rect(200, 200, 20, 20)
     player.direction = 'right'
@@ -456,7 +446,7 @@ def test_pink_ghost_normal_destination_right():
 
 def test_pink_ghost_normal_destination_up():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     player.rect = pygame.Rect(200, 200, 20, 20)
     player.direction = 'up'
@@ -466,7 +456,7 @@ def test_pink_ghost_normal_destination_up():
 
 def test_pink_ghost_normal_destination_down():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     player.rect = pygame.Rect(200, 200, 20, 20)
     player.direction = 'down'
@@ -476,7 +466,7 @@ def test_pink_ghost_normal_destination_down():
 
 def test_orange_ghost_road_to_player():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost = GhostOrange(game)
     player.rect = pygame.Rect(20, 140, 20, 20)
@@ -486,7 +476,7 @@ def test_orange_ghost_road_to_player():
 
 def test_orange_ghost_normal_destionation_close_to_player():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost = GhostOrange(game)
     player.rect = pygame.Rect(20, 100, 20, 20)
@@ -497,7 +487,7 @@ def test_orange_ghost_normal_destionation_close_to_player():
 
 def test_orange_ghost_normal_destionation_far_from_player():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost = GhostOrange(game)
     player.rect = pygame.Rect(20, 1000, 20, 20)
@@ -508,7 +498,7 @@ def test_orange_ghost_normal_destionation_far_from_player():
 
 def test_ghost_blue_normal_destionation_left_to_right():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost_blue = GhostBlue(game)
     player.direction = 'right'
@@ -524,7 +514,7 @@ def test_ghost_blue_normal_destionation_left_to_right():
 
 def test_ghost_blue_normal_destionation_right_to_left():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost_blue = GhostBlue(game)
     player.direction = 'right'
@@ -540,7 +530,7 @@ def test_ghost_blue_normal_destionation_right_to_left():
 
 def test_ghost_blue_normal_destionation_bot_to_top():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost_blue = GhostBlue(game)
     player.direction = 'right'
@@ -556,7 +546,7 @@ def test_ghost_blue_normal_destionation_bot_to_top():
 
 def test_ghost_blue_normal_destionation_top_to_bot():
     game = Game()
-    player = Player('pacman_player.png', game)
+    player = Player(PLAYER_PHOTO, game)
     game.player = player
     ghost_blue = GhostBlue(game)
     player.direction = 'right'

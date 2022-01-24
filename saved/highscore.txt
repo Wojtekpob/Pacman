@@ -1,5 +1,6 @@
 name,score
 aaa,110
+aa,280
 bbbb,110
 cccc,130
 lomza,110
@@ -25,3 +26,6 @@ kamila,20450
 qaq,9350
 test,6770
 xD,8610
+aaaqq,10460
+dobry,14630
+
