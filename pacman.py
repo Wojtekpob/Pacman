@@ -1,7 +1,8 @@
+import py
 import pygame
 from math import fabs, sqrt
 from settings import (
-    BLUE, BLUE_GHOST_STARTING_POSITION, CELL_LENGHT,
+    BLACK, BLUE, BLUE_GHOST_STARTING_POSITION, CELL_LENGHT,
     GHOST_HEIGHT, GHOST_RADIOUS, GHOST_WIDTH, ORANGE, ORANGE_GHOST_STARTING_POSITION,
     PINK, PINK_GHOST_STARTING_POSITION, POWERUP_VALUE, RED,
     RED_GHOST_STARTING_POSITION,
@@ -135,6 +136,7 @@ class Player(MovingObject):
         self.lives = 3
         self.score = 0
         self.ghost_eaten = 0
+        self.next_direction = None
 
     def move(self, keys_pressed):
         """
@@ -142,7 +144,11 @@ class Player(MovingObject):
         keys_pressed: direction of movement is based on keys(W, A, S, D)
         """
         self.teleport_back_to_map()
-        self.change_direction(keys_pressed)
+        if keys_pressed[pygame.K_a] or keys_pressed[pygame.K_s] or keys_pressed[pygame.K_w] or keys_pressed[pygame.K_d]:
+            self.next_direction = self.chose_direction(keys_pressed)
+            print(self.next_direction)
+        if self.next_direction:
+            self.change_direction(self.next_direction)
         for _ in range(self.speed):
             if self.able_to_move():
                 if self.direction == 'right':
@@ -154,21 +160,31 @@ class Player(MovingObject):
                 elif self.direction == 'up':
                     self.rect.y -= 1
 
-    def change_direction(self, keys_pressed):
+    def chose_direction(self, keys_pressed):
+        if keys_pressed[pygame.K_a]:
+            return 'left'
+        elif keys_pressed[pygame.K_w]:
+            return 'up'
+        elif keys_pressed[pygame.K_s]:
+            return 'down'
+        elif keys_pressed[pygame.K_d]:
+           return 'right'
+
+    def change_direction(self, next_direction):
         """
         Takes keys that are pressed on keyboard as an argument, changes direction
         of player and its image direction if it is able to.
         """
-        if keys_pressed[pygame.K_a] and self.able_to_change_direction('left'):
+        if next_direction == 'left' and self.able_to_change_direction('left'):
             self.direction = 'left'
             self.image = self.image_left
-        elif keys_pressed[pygame.K_w] and self.able_to_change_direction('up'):
+        elif next_direction == 'up' and self.able_to_change_direction('up'):
             self.direction = 'up'
             self.image = self.image_up
-        elif keys_pressed[pygame.K_s] and self.able_to_change_direction('down'):
+        elif next_direction == 'down' and self.able_to_change_direction('down'):
             self.direction = 'down'
             self.image = self.image_down
-        elif keys_pressed[pygame.K_d] and self.able_to_change_direction('right'):
+        elif next_direction == 'right' and self.able_to_change_direction('right'):
             self.direction = 'right'
             self.image = self.image_right
 
@@ -413,7 +429,7 @@ class GhostOrange(Ghost):
         If ghost is far from player returns player's position, else returns
         the left up corner.
         """
-        if self.road_to_player() > 5:
+        if self.road_to_player() > 8:
             return self.game.player.map_position()
         else:
             return (20, 80)
@@ -475,6 +491,7 @@ class Wall:
     def draw(self):
         """Draw blue rectangle in its position."""
         pygame.draw.rect(self.game.screen, BLUE, self.rect)
+        pygame.draw.circle(self.game.screen, BLACK, (self.rect.x + 10, self.rect.y + 10), 5)
 
 
 class EatableObject:
