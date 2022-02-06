@@ -9,7 +9,7 @@ from settings import (
     PLAYERS_HEIGHT,
     PLAYERS_SPEED,
     PLAYERS_STARTING_POSITION,
-    PLAYERS_WIDTH, TOP_EMPTY_SPACE, TURQUOISE, WALL_SIDE_LENGHT, WHITE, YELLOW,
+    PLAYERS_WIDTH, TOP_EMPTY_SPACE, TURQUOISE, WALL_SIDE_LENGHT, WHITE, WHITE_BLUE, YELLOW,
     COIN_VALUE, frightened_mode
 )
 from random import sample
@@ -490,8 +490,8 @@ class Wall:
 
     def draw(self):
         """Draw blue rectangle in its position."""
-        pygame.draw.rect(self.game.screen, BLUE, self.rect)
-        pygame.draw.circle(self.game.screen, BLACK, (self.rect.x + 10, self.rect.y + 10), 5)
+        # pygame.draw.rect(self.game.screen, WHITE_BLUE, self.rect)
+        pygame.draw.circle(self.game.screen, WHITE_BLUE, (self.rect.x + 10, self.rect.y + 10), 10)
 
 
 class EatableObject:
