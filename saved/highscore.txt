@@ -1,9 +1,3 @@
 name,score
-aaa,110
-wojtek,19980
-ketjow,28130
-									,180
-222121221,260
-aaa,6470
-"wojtek",6520
-aledymXD,116490
+wpwo,130
+123,9860

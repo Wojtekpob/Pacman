@@ -146,7 +146,7 @@ class Player(MovingObject):
         self.teleport_back_to_map()
         if keys_pressed[pygame.K_a] or keys_pressed[pygame.K_s] or keys_pressed[pygame.K_w] or keys_pressed[pygame.K_d]:
             self.next_direction = self.chose_direction(keys_pressed)
-            print(self.next_direction)
+            # print(self.next_direction)
         if self.next_direction:
             self.change_direction(self.next_direction)
         for _ in range(self.speed):
@@ -490,8 +490,8 @@ class Wall:
 
     def draw(self):
         """Draw blue rectangle in its position."""
-        # pygame.draw.rect(self.game.screen, WHITE_BLUE, self.rect)
-        pygame.draw.circle(self.game.screen, WHITE_BLUE, (self.rect.x + 10, self.rect.y + 10), 10)
+        pygame.draw.rect(self.game.screen, WHITE_BLUE, self.rect)
+        # # pygame.draw.circle(self.game.screen, WHITE_BLUE, (self.rect.x + 10, self.rect.y + 10), 10)
 
 
 class EatableObject:
