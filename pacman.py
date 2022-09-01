@@ -491,6 +491,9 @@ class Wall:
     def draw(self):
         """Draw blue rectangle in its position."""
         pygame.draw.rect(self.game.screen, WHITE_BLUE, self.rect)
+        pygame.draw.aaline(self.game.screen,BLACK,(self.rect.x,self.rect.y),(self.rect.x,self.rect.y+WALL_SIDE_LENGHT))
+        pygame.draw.aaline(self.game.screen,BLACK,(self.rect.x,self.rect.y),(self.rect.x+WALL_SIDE_LENGHT,self.rect.y))
+        pygame.draw.aaline(self.game.screen,BLACK,(self.rect.x+WALL_SIDE_LENGHT,self.rect.y),(self.rect.x+WALL_SIDE_LENGHT,self.rect.y-WALL_SIDE_LENGHT))
         # # pygame.draw.circle(self.game.screen, WHITE_BLUE, (self.rect.x + 10, self.rect.y + 10), 10)
 
 

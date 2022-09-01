@@ -1,3 +1,7 @@
 name,score
 wpwo,130
 123,9860
+k,2880
+kamila,5430
+xDDD,25920
+ketjow,30930

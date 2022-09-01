@@ -271,8 +271,8 @@ class Game:
         for ghost in self.ghosts:
             ghost.move()
         if len(self.coins) == 0:
-            self.player.score += 2000
-            if self.map < 4:
+            self.player.score += 2000*self.map
+            if self.map <= 4:
                 self.map += 1
                 self.load_map()
                 self.back_to_start()
@@ -291,6 +291,8 @@ class Game:
             self.create_map('maps/map2.txt')
         elif self.map == 3:
             self.create_map('maps/map3.txt')
+        # elif self.map == 4:
+        #     self.create_map('maps/map4.txt')
 
     def display_screen(self):
         """
