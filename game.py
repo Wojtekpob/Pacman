@@ -81,7 +81,6 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                    print(self.player.score)
                 if frightened_mode == event.type:
                     pygame.time.set_timer(normal_mode, 6000, loops=1)
                     for ghost in self.ghosts:
@@ -177,6 +176,8 @@ class Game:
         game_data = {
             'coins': coins_data,
             'player_position': player_position,
+            'player_lives': self.player.lives,
+            'player_direction': self.player.direction,
             'score': score,
             'ghosts_data': ghosts_data,
             'map': map
@@ -193,10 +194,11 @@ class Game:
             file_handle = json.load(handle)
             player_positionx = file_handle['player_position'][0] * CELL_LENGHT
             player_positiony = file_handle['player_position'][1] * CELL_LENGHT + TOP_EMPTY_SPACE
+            player_lives = file_handle['player_lives']
             score = file_handle['score']
             map = file_handle['map']
             self.map = map
-            self.load_player((player_positionx, player_positiony), score)
+            self.load_player((player_positionx, player_positiony), score, player_lives)
             self.load_map()
             ghosts_data = file_handle['ghosts_data']
             self.coins = []
@@ -206,7 +208,7 @@ class Game:
             for ghost_data in ghosts_data:
                 self.load_ghost(ghost_data)
 
-    def load_player(self, position, score):
+    def load_player(self, position, score, lives):
         """
         Creates player after load form saved file. By setting its position,
         score and his image.
@@ -215,6 +217,7 @@ class Game:
         x, y = position
         self.player.score = score
         self.player.rect = pygame.Rect(x, y, PLAYERS_WIDTH, PLAYERS_WIDTH)
+        self.player.lives = lives
 
     def load_coin(self, coin_data):
         """
@@ -268,8 +271,8 @@ class Game:
         for ghost in self.ghosts:
             ghost.move()
         if len(self.coins) == 0:
-            self.player.score += 2000
-            if self.map < 4:
+            self.player.score += 2000*self.map
+            if self.map <= 4:
                 self.map += 1
                 self.load_map()
                 self.back_to_start()
@@ -288,6 +291,8 @@ class Game:
             self.create_map('maps/map2.txt')
         elif self.map == 3:
             self.create_map('maps/map3.txt')
+        # elif self.map == 4:
+        #     self.create_map('maps/map4.txt')
 
     def display_screen(self):
         """
@@ -350,6 +355,7 @@ class Game:
                 if event.key == pygame.K_l:
                     self.load_game()
                     self.state = 'game'
+                    self.pause = True
                 if event.key == pygame.K_h:
                     self.state = 'highscore'
 
